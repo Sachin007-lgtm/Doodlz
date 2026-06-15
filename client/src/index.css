@@ -542,11 +542,11 @@ select:focus { box-shadow: var(--shadow-sm); }
 
 .folder-tab {
   padding: 12px 24px;
-  background: #150f1f;
-  border: 4px solid #ffffff;
+  background: #e5e2d9;
+  border: 4px solid #000000;
   border-bottom: none;
   border-radius: 8px 8px 0 0;
-  color: #a78bfa;
+  color: #555555;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
@@ -554,16 +554,16 @@ select:focus { box-shadow: var(--shadow-sm); }
   text-transform: uppercase;
   transition: var(--transition);
   position: relative;
-  box-shadow: inset 0 4px 0 0 #000000, inset 4px 0 0 0 #000000, inset -4px 0 0 0 #000000;
+  box-shadow: inset 0 4px 0 0 #ffffff, inset 4px 0 0 0 #ffffff, inset -4px 0 0 0 #ffffff;
 }
 
 .folder-tab.active {
-  background: #251b35;
-  color: #00FA9A;
+  background: #fdfcf4;
+  color: #000000;
   border-bottom: 4px solid transparent;
   z-index: 2;
   transform: translateY(4px);
-  box-shadow: inset 0 4px 0 0 #000000, inset 4px 0 0 0 #000000, inset -4px 0 0 0 #000000;
+  box-shadow: inset 0 4px 0 0 #ffffff, inset 4px 0 0 0 #ffffff, inset -4px 0 0 0 #ffffff;
 }
 .folder-tab.active::after {
   content: '';
@@ -572,13 +572,13 @@ select:focus { box-shadow: var(--shadow-sm); }
   left: 4px;
   right: 4px;
   height: 8px;
-  background: #251b35;
+  background: #fdfcf4;
   z-index: 3;
 }
 
 .folder-content {
-  background: #251b35;
-  border: 4px solid #ffffff;
+  background: #fdfcf4;
+  border: 4px solid #000000;
   border-radius: 12px;
   padding: 20px 24px;
   flex: 1;
@@ -586,8 +586,8 @@ select:focus { box-shadow: var(--shadow-sm); }
   flex-direction: column;
   z-index: 1;
   position: relative;
-  box-shadow: inset 0 0 0 4px #000000, 8px 8px 0px #000000;
-  color: #ffffff;
+  box-shadow: inset 0 0 0 4px #ffffff, 8px 8px 0px #000000;
+  color: #000000;
 }
 
 /* Custom Neo-Brutalist scrollbar for folder content */
@@ -595,16 +595,16 @@ select:focus { box-shadow: var(--shadow-sm); }
   width: 12px;
 }
 .folder-content::-webkit-scrollbar-track {
-  background: #251b35;
-  border-left: 3px solid #ffffff;
+  background: #fdfcf4;
+  border-left: 3px solid #000000;
 }
 .folder-content::-webkit-scrollbar-thumb {
-  background: #ffffff;
-  border: 2px solid #251b35;
+  background: #000000;
+  border: 2px solid #fdfcf4;
   border-radius: 4px;
 }
 .folder-content::-webkit-scrollbar-thumb:hover {
-  background: #a78bfa;
+  background: #555555;
 }
 
 .folder-content::before {
