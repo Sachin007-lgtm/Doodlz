@@ -56,7 +56,7 @@ export default function GameOverPage() {
   const handleHome = () => { resetGame(); navigate('/') }
 
   return (
-    <div className="page-wrapper custom-scroll" style={{ overflowY: 'auto', background: 'transparent', position: 'relative' }}>
+    <div className="page-wrapper custom-scroll" style={{ overflowY: 'auto', background: 'var(--solid-bg, #1c1a27)', position: 'relative' }}>
       <Confetti />
 
       <main style={{ maxWidth: 720, margin: '0 auto', padding: '40px 20px 60px', position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

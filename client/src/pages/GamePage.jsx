@@ -49,7 +49,7 @@ export default function GamePage() {
   const showRoundEnd      = gameState.phase === 'round_end' && roundEndData
 
   return (
-    <div className="page-wrapper" style={{ overflow: 'hidden', background: 'transparent' }}>
+    <div className="page-wrapper" style={{ overflow: 'hidden', background: 'var(--solid-bg, #1c1a27)' }}>
 
       {/* ── Header (Floating Glass Bar) ─────────────────────────────── */}
       <header style={{
@@ -167,7 +167,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
   }
 
   return (
-    <div className="page-wrapper custom-scroll" style={{ overflowY: 'auto', background: 'transparent' }}>
+    <div className="page-wrapper custom-scroll" style={{ overflowY: 'auto', background: 'var(--solid-bg, #1c1a27)' }}>
       <main style={{ flex: 1, padding: '30px 20px', maxWidth: 800, margin: '0 auto', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
         {/* Top Logo */}

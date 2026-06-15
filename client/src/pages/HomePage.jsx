@@ -124,7 +124,7 @@ export default function HomePage() {
       <main style={{ flex: 1, padding: '0 20px 20px', maxWidth: 1000, margin: '-20px auto 0', width: '100%', position: 'relative', zIndex: 10 }}>
         
         {/* Swapping Container */}
-        <div style={{ position: 'relative', width: '100%', height: '100%', minHeight: 480 }}>
+        <div style={{ position: 'relative', width: '100%', height: 440 }}>
 
           {/* Panel 1: Forms & Settings */}
           <div style={{ 

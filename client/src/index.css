@@ -23,6 +23,7 @@
   --accent-yellow: #ffe16d;
   --accent-yellow-dim: #e9c400;
   --success-mint: #00FA9A;
+  --solid-bg: #1c1a27;
   
   /* Text & Inks */
   --ink-black: #ffffff; /* Re-mapped for dark theme borders and text */
@@ -388,8 +389,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* ── Canvas container ───────────────────────────────────────── */
 .canvas-wrapper {
-  background: var(--paper-white);
-  background-image: radial-gradient(var(--surface-high) 1px, transparent 1px);
+  background: #ffffff;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1px, transparent 1px);
   background-size: 20px 20px;
   border: var(--border);
   box-shadow: var(--shadow);
