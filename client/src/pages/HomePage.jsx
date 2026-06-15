@@ -14,26 +14,26 @@ const howToPlaySteps = [
     title: '1. TIME TO DRAW',
     desc: "You're gonna receive a bizarre sentence to draw.",
     icon: 'draw',
-    color: '#000'
+    color: '#00FA9A'
   },
   {
     title: '2. GUESS THE ART',
     desc: "Type your guesses as fast as you can to earn maximum points!",
     icon: 'psychology',
-    color: '#000'
+    color: '#ffe16d'
   },
   {
     title: '3. SEE WHAT HAPPENED',
     desc: "Watch the hilarious results of the telephone game.",
     icon: 'auto_awesome',
-    color: '#000'
+    color: '#c77dff'
   }
 ]
 
 // Neo-brutalist input/select styles
-const neoLabel = { display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#555', marginBottom: 5, fontWeight: 800 }
-const neoSelect = { width: '100%', border: '3px solid #000', background: '#fff', color: '#000', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, outline: 'none', cursor: 'pointer', boxShadow: '3px 3px 0px #000' }
-const neoInput = { width: '100%', border: '3px solid #000', background: '#fff', color: '#000', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14, outline: 'none', boxShadow: '3px 3px 0px #000', boxSizing: 'border-box' }
+const neoLabel = { display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#cbd5e1', marginBottom: 5, fontWeight: 800 }
+const neoSelect = { width: '100%', border: '3px solid #ffffff', background: '#150f1f', color: '#ffffff', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, outline: 'none', cursor: 'pointer', boxShadow: 'inset 0 0 0 2px #000000, 3px 3px 0px #000000' }
+const neoInput = { width: '100%', border: '3px solid #ffffff', background: '#150f1f', color: '#ffffff', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14, outline: 'none', boxShadow: 'inset 0 0 0 2px #000000, 3px 3px 0px #000000', boxSizing: 'border-box' }
 
 // Chunky button press handler
 const pressDown = (e) => { e.currentTarget.style.boxShadow = '1px 1px 0px #000'; e.currentTarget.style.transform = 'translate(3px, 3px)'; }
@@ -122,7 +122,7 @@ export default function HomePage() {
             filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.6))', 
             marginTop: '-40px',
             marginLeft: '40px',
-            marginBottom: '-60px',
+            marginBottom: '-20px',
             display: 'block'
           }} 
         />
@@ -157,7 +157,7 @@ export default function HomePage() {
                         {/* Avatar */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #000', boxShadow: '4px 4px 0px #000', background: 'var(--secondary-container)' }}
+                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
                           />
                           <button
                             onClick={() => setAvatarSeed(randomSeed())}
@@ -165,21 +165,21 @@ export default function HomePage() {
                             style={{
                               position: 'absolute', bottom: -5, right: -5,
                               width: 30, height: 30, borderRadius: '50%',
-                              background: '#fff', border: '3px solid #000',
-                              boxShadow: '2px 2px 0px #000', cursor: 'pointer',
+                              background: '#150f1f', border: '3px solid #ffffff',
+                              boxShadow: 'inset 0 0 0 1px #000000, 2px 2px 0px #000000', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               transition: 'transform 0.2s',
                             }}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#000', fontWeight: 'bold' }}>refresh</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#ffffff', fontWeight: 'bold' }}>refresh</span>
                           </button>
                         </div>
 
                         {/* Name Input */}
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 4, color: '#000', textTransform: 'uppercase' }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 4, color: '#ffffff', textTransform: 'uppercase' }}>
                             Choose a character<br/>and a nickname
                           </p>
                           <input
@@ -189,14 +189,14 @@ export default function HomePage() {
                             onChange={e => setPlayerName(e.target.value)}
                             maxLength={20}
                             onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#fff', border: '3px solid #000', boxShadow: '3px 3px 0px #000', width: '100%', boxSizing: 'border-box', color: '#000' }}
+                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#150f1f', border: '3px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 3px 3px 0px #000000', width: '100%', boxSizing: 'border-box', color: '#ffffff' }}
                           />
                         </div>
                       </div>
 
                       {/* Join Room Section */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 'auto' }}>
-                        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, color: '#000', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, color: '#ffffff', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>meeting_room</span>
                           Join Existing Room
                         </p>
@@ -207,9 +207,9 @@ export default function HomePage() {
                             onChange={e => setJoinCode(e.target.value.toUpperCase())}
                             maxLength={8}
                             onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                            style={{ flex: 1, letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#fff', border: '3px solid #000', boxShadow: '3px 3px 0px #000', boxSizing: 'border-box', color: '#000' }}
+                            style={{ flex: 1, letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#150f1f', border: '3px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 3px 3px 0px #000000', boxSizing: 'border-box', color: '#ffffff' }}
                           />
-                          <button className="btn" style={{ padding: '10px 20px', fontSize: 14, borderRadius: 8, background: '#a78bfa', color: '#000', border: '3px solid #000', boxShadow: '4px 4px 0px #000', fontWeight: 900, transition: 'all 0.1s' }}
+                          <button className="btn" style={{ padding: '10px 20px', fontSize: 14, borderRadius: 8, background: '#a78bfa', color: '#000', border: '3px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 4px 4px 0px #000000', fontWeight: 900, transition: 'all 0.1s' }}
                             onClick={handleJoin} disabled={loading === 'join'}
                             onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
                           >
@@ -226,7 +226,7 @@ export default function HomePage() {
                         {/* Avatar */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #000', boxShadow: '4px 4px 0px #000', background: 'var(--secondary-container)' }}
+                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
                           />
                           <button
                             onClick={() => setAvatarSeed(randomSeed())}
@@ -234,21 +234,21 @@ export default function HomePage() {
                             style={{
                               position: 'absolute', bottom: -5, right: -5,
                               width: 30, height: 30, borderRadius: '50%',
-                              background: '#fff', border: '3px solid #000',
-                              boxShadow: '2px 2px 0px #000', cursor: 'pointer',
+                              background: '#150f1f', border: '3px solid #ffffff',
+                              boxShadow: 'inset 0 0 0 1px #000000, 2px 2px 0px #000000', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               transition: 'transform 0.2s',
                             }}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#000', fontWeight: 'bold' }}>refresh</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#ffffff', fontWeight: 'bold' }}>refresh</span>
                           </button>
                         </div>
 
                         {/* Name Input */}
                         <div style={{ flex: 1 }}>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 4, color: '#000', textTransform: 'uppercase' }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 4, color: '#ffffff', textTransform: 'uppercase' }}>
                             Choose a character<br/>and a nickname
                           </p>
                           <input
@@ -258,14 +258,14 @@ export default function HomePage() {
                             onChange={e => setPlayerName(e.target.value)}
                             maxLength={20}
                             onKeyDown={e => e.key === 'Enter' && handleCreateRoom()}
-                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#fff', border: '3px solid #000', boxShadow: '3px 3px 0px #000', width: '100%', boxSizing: 'border-box', color: '#000' }}
+                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#150f1f', border: '3px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 3px 3px 0px #000000', width: '100%', boxSizing: 'border-box', color: '#ffffff' }}
                           />
                         </div>
                       </div>
 
                       {/* Room Settings Section */}
                       <div style={{ marginBottom: 12 }}>
-                        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 8, color: '#000', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 8, color: '#ffffff', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
                           Room Settings
                         </p>
@@ -297,12 +297,12 @@ export default function HomePage() {
                           {['standard', 'custom'].map(m => (
                             <button key={m} onClick={() => setWordMode(m)} style={{
                               flex: 1, padding: '7px 0',
-                              background: wordMode === m ? '#facc15' : '#fff',
-                              color: '#000',
-                              border: '3px solid #000', borderRadius: 4,
+                              background: wordMode === m ? '#facc15' : '#150f1f',
+                              color: wordMode === m ? '#000' : '#ffffff',
+                              border: '3px solid #ffffff', borderRadius: 4,
                               fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12,
                               cursor: 'pointer', textTransform: 'uppercase',
-                              boxShadow: wordMode === m ? '3px 3px 0px #000' : '2px 2px 0px #000',
+                              boxShadow: wordMode === m ? 'inset 0 0 0 2px #000000, 3px 3px 0px #000000' : 'inset 0 0 0 2px #000000, 2px 2px 0px #000000',
                               transition: 'all 0.15s',
                             }}>
                               {m}
@@ -312,7 +312,7 @@ export default function HomePage() {
                       </div>
 
                       {/* Start Room Button */}
-                      <button className="btn" style={{ width: '100%', fontSize: 16, padding: '10px 0', borderRadius: 8, background: '#4ade80', color: '#000', border: '4px solid #000', boxShadow: '4px 4px 0px #000', fontWeight: 900, transition: 'all 0.1s', marginTop: 'auto' }}
+                      <button className="btn" style={{ width: '100%', fontSize: 16, padding: '10px 0', borderRadius: 8, background: '#4ade80', color: '#000', border: '4px solid #ffffff', boxShadow: 'inset 0 0 0 2px #000000, 4px 4px 0px #000000', fontWeight: 900, transition: 'all 0.1s', marginTop: 'auto' }}
                         onClick={handleCreateRoom}
                         onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
                       >
@@ -335,7 +335,7 @@ export default function HomePage() {
           }}>
              {/* How To Play Card */}
              <div className="folder-content" style={{ flex: 1, marginTop: 38 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: '#000', textAlign: 'center', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: '#00e5ff', textAlign: 'center', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   How To Play
                 </h2>
                 
@@ -344,10 +344,10 @@ export default function HomePage() {
                     <span className="material-symbols-outlined" style={{ fontSize: 64, color: howToPlaySteps[howToPlayStep].color, marginBottom: 12 }}>
                       {howToPlaySteps[howToPlayStep].icon}
                     </span>
-                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 900, marginBottom: 6, color: '#000' }}>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 900, marginBottom: 6, color: '#ffffff' }}>
                       {howToPlaySteps[howToPlayStep].title}
                     </h3>
-                    <p style={{ color: '#333', fontSize: 14, fontWeight: 600, maxWidth: 240, margin: '0 auto', lineHeight: 1.4 }}>
+                    <p style={{ color: '#cbd5e1', fontSize: 14, fontWeight: 600, maxWidth: 240, margin: '0 auto', lineHeight: 1.4 }}>
                       {howToPlaySteps[howToPlayStep].desc}
                     </p>
                   </div>
@@ -356,7 +356,7 @@ export default function HomePage() {
                 {/* Carousel Indicators */}
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 16 }}>
                   <span className="material-symbols-outlined" onClick={handlePrevStep}
-                    style={{ color: '#000', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
+                    style={{ color: '#ffffff', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
                     navigate_before
                   </span>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -364,14 +364,14 @@ export default function HomePage() {
                       <span key={index} onClick={() => setHowToPlayStep(index)}
                         style={{ 
                           width: index === howToPlayStep ? 14 : 8, height: index === howToPlayStep ? 14 : 8, 
-                          borderRadius: '50%', border: '3px solid #000',
-                          background: index === howToPlayStep ? '#000' : 'transparent',
+                          borderRadius: '50%', border: '3px solid #ffffff',
+                          background: index === howToPlayStep ? '#ffffff' : 'transparent',
                           cursor: 'pointer', transition: 'all 0.2s ease-in-out'
                         }} />
                     ))}
                   </div>
                   <span className="material-symbols-outlined" onClick={handleNextStep}
-                    style={{ color: '#000', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
+                    style={{ color: '#ffffff', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
                     navigate_next
                   </span>
                 </div>
@@ -379,10 +379,10 @@ export default function HomePage() {
 
              {/* Decorative Quote Card (like PEBLO) */}
              <div style={{
-               background: '#fffce0',
-               border: '3px solid #000',
+               background: '#150f1f',
+               border: '3px solid #ffffff',
                borderRadius: 4,
-               boxShadow: '5px 5px 0px #000',
+               boxShadow: 'inset 0 0 0 2px #000000, 5px 5px 0px #000000',
                padding: '12px 16px',
                display: 'flex',
                alignItems: 'center',
@@ -391,8 +391,8 @@ export default function HomePage() {
              }}>
                <img src={doodlzCharacters} alt="Doodlz characters" style={{ width: 56, height: 56, objectFit: 'contain', flexShrink: 0 }} />
                <div>
-                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: '#333', lineHeight: 1.4, fontStyle: 'italic' }}>
-                   "Creativity is the enemy of boredom. Let's make something weird today."
+                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: '#cbd5e1', lineHeight: 1.4, fontStyle: 'italic' }}>
+                   "Creativity is the enemy of boredom. Let's make something weird today... because Picasso had to start somewhere too."
                  </p>
                </div>
                {/* Speech bubble tail */}
@@ -401,14 +401,14 @@ export default function HomePage() {
                  width: 0, height: 0,
                  borderLeft: '8px solid transparent',
                  borderRight: '8px solid transparent',
-                 borderBottom: '10px solid #000',
+                 borderBottom: '10px solid #ffffff',
                }} />
                <div style={{
                  position: 'absolute', top: -7, left: 31,
                  width: 0, height: 0,
                  borderLeft: '7px solid transparent',
                  borderRight: '7px solid transparent',
-                 borderBottom: '9px solid #fffce0',
+                 borderBottom: '9px solid #150f1f',
                }} />
              </div>
           </div>

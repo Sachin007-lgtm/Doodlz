@@ -104,13 +104,14 @@ body {
   height: 90vh; /* Fixed aspect ratio feel */
   max-height: 850px;
   min-height: 600px;
-  /* Completely transparent so it blends perfectly with the outside */
-  background: transparent;
+  /* Solid background (fully filled) */
+  background: var(--solid-bg, #1c1a27);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 2px solid white;
+  /* Two-layer border (white outer, black inner) */
+  border: 4px solid #ffffff;
+  box-shadow: inset 0 0 0 4px #000000;
   border-radius: 20px;
-  box-shadow: none;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -541,11 +542,11 @@ select:focus { box-shadow: var(--shadow-sm); }
 
 .folder-tab {
   padding: 12px 24px;
-  background: #e5e2d9;
-  border: 4px solid #000;
+  background: #150f1f;
+  border: 4px solid #ffffff;
   border-bottom: none;
-  border-radius: 4px 4px 0 0;
-  color: #000;
+  border-radius: 8px 8px 0 0;
+  color: #a78bfa;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 14px;
@@ -553,38 +554,40 @@ select:focus { box-shadow: var(--shadow-sm); }
   text-transform: uppercase;
   transition: var(--transition);
   position: relative;
+  box-shadow: inset 0 4px 0 0 #000000, inset 4px 0 0 0 #000000, inset -4px 0 0 0 #000000;
 }
 
 .folder-tab.active {
-  background: #fdfcf4;
-  color: #000;
-  border-bottom: 4px solid transparent; /* Hide bottom border */
+  background: #251b35;
+  color: #00FA9A;
+  border-bottom: 4px solid transparent;
   z-index: 2;
   transform: translateY(4px);
+  box-shadow: inset 0 4px 0 0 #000000, inset 4px 0 0 0 #000000, inset -4px 0 0 0 #000000;
 }
 .folder-tab.active::after {
   content: '';
   position: absolute;
-  bottom: -4px;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: #fdfcf4;
+  bottom: -8px;
+  left: 4px;
+  right: 4px;
+  height: 8px;
+  background: #251b35;
   z-index: 3;
 }
 
 .folder-content {
-  background: #fdfcf4;
-  border: 4px solid #000;
-  border-radius: 4px;
+  background: #251b35;
+  border: 4px solid #ffffff;
+  border-radius: 12px;
   padding: 20px 24px;
   flex: 1;
   display: flex;
   flex-direction: column;
   z-index: 1;
   position: relative;
-  box-shadow: 8px 8px 0px #000;
-  color: #000;
+  box-shadow: inset 0 0 0 4px #000000, 8px 8px 0px #000000;
+  color: #ffffff;
 }
 
 /* Custom Neo-Brutalist scrollbar for folder content */
@@ -592,29 +595,19 @@ select:focus { box-shadow: var(--shadow-sm); }
   width: 12px;
 }
 .folder-content::-webkit-scrollbar-track {
-  background: #fdfcf4;
-  border-left: 3px solid #000;
+  background: #251b35;
+  border-left: 3px solid #ffffff;
 }
 .folder-content::-webkit-scrollbar-thumb {
-  background: #000;
-  border: 2px solid #fdfcf4;
-  border-radius: 2px;
+  background: #ffffff;
+  border: 2px solid #251b35;
+  border-radius: 4px;
 }
 .folder-content::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #a78bfa;
 }
 
 .folder-content::before {
-  content: '';
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  width: 80px;
-  height: 24px;
-  background: rgba(255, 255, 200, 0.9);
-  border: 2px solid #000;
-  box-shadow: 2px 2px 0px #000;
-  z-index: 10;
+  display: none; /* Hide folders sticky note tape */
 }
 
