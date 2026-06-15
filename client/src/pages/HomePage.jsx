@@ -121,7 +121,7 @@ export default function HomePage() {
             objectFit: 'contain', 
             filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.6))', 
             marginTop: '-40px',
-            marginLeft: '40px',
+            marginLeft: '-10px',
             marginBottom: '-20px',
             display: 'block'
           }} 
@@ -153,18 +153,18 @@ export default function HomePage() {
                   {activeTab === 'anonymous' ? (
                     <>
                       {/* Stacked Avatar & Inputs Area */}
-                      <div style={{ display: 'flex', gap: 20, marginBottom: 20 }}>
+                      <div style={{ display: 'flex', gap: 20, marginBottom: 20, alignItems: 'center' }}>
                         {/* Avatar (Left) */}
-                        <div style={{ position: 'relative', flexShrink: 0, marginTop: 10 }}>
+                        <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
+                            style={{ width: 140, height: 140, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
                           />
                           <button
                             onClick={() => setAvatarSeed(randomSeed())}
                             title="Get a new avatar!"
                             style={{
-                              position: 'absolute', bottom: -5, right: -5,
-                              width: 30, height: 30, borderRadius: '50%',
+                              position: 'absolute', bottom: 5, right: 5,
+                              width: 36, height: 36, borderRadius: '50%',
                               background: '#ffffff', border: '3px solid #000000',
                               boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -173,7 +173,7 @@ export default function HomePage() {
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#000000', fontWeight: 'bold' }}>refresh</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#000000', fontWeight: 'bold' }}>refresh</span>
                           </button>
                         </div>
 
@@ -190,7 +190,7 @@ export default function HomePage() {
                               onChange={e => setPlayerName(e.target.value)}
                               maxLength={20}
                               onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                              style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: '100%', boxSizing: 'border-box', color: '#000000' }}
+                              style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: 250, boxSizing: 'border-box', color: '#000000' }}
                             />
                           </div>
 
@@ -205,7 +205,7 @@ export default function HomePage() {
                               onChange={e => setJoinCode(e.target.value.toUpperCase())}
                               maxLength={8}
                               onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                              style={{ letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', boxSizing: 'border-box', color: '#000000', width: '100%' }}
+                              style={{ letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', boxSizing: 'border-box', color: '#000000', width: 250 }}
                             />
                           </div>
                         </div>
@@ -224,18 +224,18 @@ export default function HomePage() {
                     /* Create Room Tab Content */
                     <>
                       {/* Avatar & Nickname Selection */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
                         {/* Avatar */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 80, height: 80, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
+                            style={{ width: 140, height: 140, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
                           />
                           <button
                             onClick={() => setAvatarSeed(randomSeed())}
                             title="Get a new avatar!"
                             style={{
-                              position: 'absolute', bottom: -5, right: -5,
-                              width: 30, height: 30, borderRadius: '50%',
+                              position: 'absolute', bottom: 5, right: 5,
+                              width: 36, height: 36, borderRadius: '50%',
                               background: '#ffffff', border: '3px solid #000000',
                               boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -244,7 +244,7 @@ export default function HomePage() {
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#000000', fontWeight: 'bold' }}>refresh</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#000000', fontWeight: 'bold' }}>refresh</span>
                           </button>
                         </div>
 
@@ -260,7 +260,7 @@ export default function HomePage() {
                             onChange={e => setPlayerName(e.target.value)}
                             maxLength={20}
                             onKeyDown={e => e.key === 'Enter' && handleCreateRoom()}
-                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: '100%', boxSizing: 'border-box', color: '#000000' }}
+                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: 250, boxSizing: 'border-box', color: '#000000' }}
                           />
                         </div>
                       </div>
