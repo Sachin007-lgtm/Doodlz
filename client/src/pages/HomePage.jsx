@@ -100,7 +100,7 @@ export default function HomePage() {
     <div className="page-wrapper" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
       {/* Header Area */}
-      <div style={{ textAlign: 'center', padding: '0 20px 0', position: 'relative', width: '100%', flexShrink: 0 }}>
+      <div style={{ textAlign: 'left', padding: '0 20px 0', position: 'relative', width: '100%', flexShrink: 0 }}>
         {/* Connection Status (Top Right) */}
         <div style={{ position: 'absolute', top: 20, right: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#00FA9A' : '#aaa', display: 'inline-block', border: '1px solid rgba(0,0,0,0.2)' }} />
@@ -116,7 +116,15 @@ export default function HomePage() {
           loop 
           muted 
           playsInline
-          style={{ height: '190px', objectFit: 'contain', filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.6))', marginTop: '-15px' }} 
+          style={{ 
+            height: '240px', 
+            objectFit: 'contain', 
+            filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.6))', 
+            marginTop: '-40px',
+            marginLeft: '40px',
+            marginBottom: '-60px',
+            display: 'block'
+          }} 
         />
       </div>
 
