@@ -196,7 +196,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
         </div>
 
         {/* Players grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24, width: '100%', maxWidth: 560 }}>
           {players.map(p => (
             <div key={p.id} className="neo-card" style={{
               padding: '14px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,

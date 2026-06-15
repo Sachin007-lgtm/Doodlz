@@ -145,7 +145,23 @@ export function GameProvider({ children }) {
       roundEndData,
       gameOverData,
       resetGame: () => {
-        setGameState(s => ({ ...s, phase: 'waiting' }))
+        setRoom(null)
+        setMyPlayer(null)
+        setPlayers([])
+        setGameState({
+          phase: 'waiting',
+          currentRound: 0,
+          totalRounds: 3,
+          currentDrawerId: null,
+          drawerName: '',
+          timeLeft: 0,
+          hint: '',
+          blankWord: '',
+          wordLength: 0,
+          wordOptions: null,
+          currentWord: null,
+          correctGuessCount: 0,
+        })
         setChat([])
         setRoundEndData(null)
         setGameOverData(null)
