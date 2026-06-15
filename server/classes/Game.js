@@ -1,0 +1,359 @@
+// ============================================================
+//  Game class — manages round logic, scoring, timers, hints
+// ============================================================
+
+const { getRandomWords } = require('../words');
+
+const PHASE = {
+  WAITING: 'waiting',
+  WORD_SELECTION: 'word_selection',
+  DRAWING: 'drawing',
+  ROUND_END: 'round_end',
+  GAME_OVER: 'game_over',
+};
+
+class Game {
+  constructor(room) {
+    this.room = room;
+    this.phase = PHASE.WAITING;
+    this.currentRound = 0;
+    this.totalRounds = room.settings.rounds;
+    this.drawTime = room.settings.drawTime;
+    this.wordCount = room.settings.wordCount;
+
+    // Turn management
+    this.drawQueue = [];        // ordered list of playerIds
+    this.currentDrawerIndex = 0;
+    this.currentDrawerId = null;
+
+    // Word state
+    this.currentWord = null;
+    this.wordOptions = [];
+    this.revealedIndices = new Set(); // which letter positions are revealed
+    this.hintIntervals = [];
+
+    // Timer
+    this.timerInterval = null;
+    this.timeLeft = 0;
+    this.wordChoiceTimeout = null;
+
+    // Drawing strokes for late-join replay
+    this.strokes = [];          // [{type, x, y, color, size, tool}]
+    this.currentStroke = null;
+
+    // Scores
+    this.correctGuessCount = 0; // how many guessed this round
+  }
+
+  // ── Game lifecycle ─────────────────────────────────────────
+
+  start() {
+    // Build draw queue from current players
+    this.drawQueue = Array.from(this.room.players.keys());
+    this.currentRound = 1;
+    this.currentDrawerIndex = 0;
+    this._startTurn();
+  }
+
+  _startTurn() {
+    // Reset all players for new round
+    for (const p of this.room.players.values()) p.resetRound();
+    this.correctGuessCount = 0;
+    this.strokes = [];
+    this.revealedIndices = new Set();
+    this.currentWord = null;
+    // Auto-clear canvas for everyone at start of each turn
+    this.room.broadcast('canvas_clear', {});
+
+    this.currentDrawerId = this.drawQueue[this.currentDrawerIndex];
+    const drawer = this.room.getPlayerById(this.currentDrawerId);
+    if (!drawer) {
+      this._nextDrawer();
+      return;
+    }
+
+    this.phase = PHASE.WORD_SELECTION;
+    this.wordOptions = getRandomWords(this.wordCount);
+
+    // Send word choices only to drawer
+    const drawerSocket = drawer.socketId;
+    if (this.room.io) {
+      this.room.io.to(drawerSocket).emit('round_start', {
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerId: this.currentDrawerId,
+        drawerName: drawer.name,
+        wordOptions: this.wordOptions,
+        drawTime: this.drawTime,
+      });
+
+      // Broadcast to others (no word options)
+      this.room.broadcast('round_start', {
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerId: this.currentDrawerId,
+        drawerName: drawer.name,
+        wordOptions: null,
+        wordLength: null,
+        drawTime: this.drawTime,
+      });
+
+      // Actually send drawer-specific after broadcast (it will overwrite for drawer)
+      this.room.io.to(drawerSocket).emit('round_start', {
+        round: this.currentRound,
+        totalRounds: this.totalRounds,
+        drawerId: this.currentDrawerId,
+        drawerName: drawer.name,
+        wordOptions: this.wordOptions,
+        drawTime: this.drawTime,
+      });
+    }
+
+    // Auto-pick word if drawer doesn't choose in 15s
+    this.wordChoiceTimeout = setTimeout(() => {
+      if (this.phase === PHASE.WORD_SELECTION) {
+        this.wordChosen(this.currentDrawerId, this.wordOptions[0]);
+      }
+    }, 15000);
+  }
+
+  wordChosen(drawerId, word) {
+    if (this.phase !== PHASE.WORD_SELECTION) return;
+    if (drawerId !== this.currentDrawerId) return;
+
+    clearTimeout(this.wordChoiceTimeout);
+    this.currentWord = word;
+    this.phase = PHASE.DRAWING;
+    this.timeLeft = this.drawTime;
+
+    const blankWord = this._makeBlank(word);
+
+    // Tell everyone the word length (blanks), tell drawer the actual word
+    const drawer = this.room.getPlayerById(this.currentDrawerId);
+    if (drawer && this.room.io) {
+      this.room.io.to(drawer.socketId).emit('word_chosen', {
+        word: this.currentWord,
+        blank: blankWord,
+        drawTime: this.drawTime,
+      });
+    }
+    this.room.broadcastToOthers(
+      drawer ? drawer.socketId : '',
+      'word_chosen',
+      { word: null, blank: blankWord, drawTime: this.drawTime }
+    );
+
+    // Start countdown timer
+    this._startTimer();
+
+    // Schedule hints
+    this._scheduleHints();
+  }
+
+  _startTimer() {
+    this.timerInterval = setInterval(() => {
+      this.timeLeft--;
+      this.room.broadcast('timer_tick', { timeLeft: this.timeLeft });
+
+      if (this.timeLeft <= 0) {
+        this._endRound();
+      }
+    }, 1000);
+  }
+
+  _scheduleHints() {
+    const word = this.currentWord;
+    if (!word) return;
+
+    const chars = word.split('');
+    const revealableIndices = chars
+      .map((c, i) => (c !== ' ' ? i : null))
+      .filter(i => i !== null);
+
+    // Shuffle revealable positions
+    const shuffled = [...revealableIndices].sort(() => Math.random() - 0.5);
+    const maxHints = Math.min(2, Math.floor(shuffled.length / 2));
+
+    for (let h = 0; h < maxHints; h++) {
+      const delay = Math.floor((this.drawTime * 1000 * (h + 1)) / (maxHints + 1));
+      const idx = shuffled[h];
+      const t = setTimeout(() => {
+        if (this.phase !== PHASE.DRAWING) return;
+        this.revealedIndices.add(idx);
+        const hint = this._makeHintDisplay();
+        this.room.broadcast('hint_reveal', { hint, letter: word[idx], index: idx });
+      }, delay);
+      this.hintIntervals.push(t);
+    }
+  }
+
+  _endRound() {
+    this._clearTimers();
+    this.phase = PHASE.ROUND_END;
+
+    // Drawer gets points for each correct guesser
+    const drawerBonus = this.correctGuessCount * 50;
+    const drawer = this.room.getPlayerById(this.currentDrawerId);
+    if (drawer) drawer.addPoints(drawerBonus);
+
+    const scores = this.room.getPlayerList().map(p => ({
+      id: p.id,
+      name: p.name,
+      score: p.score,
+      roundScore: this.room.players.get(p.id)?.roundScore || 0,
+    }));
+
+    this.room.broadcast('round_end', {
+      word: this.currentWord,
+      scores,
+      drawerBonus,
+      drawerId: this.currentDrawerId,
+    });
+
+    // Move to next after 5s
+    setTimeout(() => this._nextDrawer(), 5000);
+  }
+
+  _nextDrawer() {
+    this.currentDrawerIndex++;
+
+    // If all players in this round have drawn, go to next round
+    if (this.currentDrawerIndex >= this.drawQueue.length) {
+      this.currentRound++;
+      this.currentDrawerIndex = 0;
+
+      if (this.currentRound > this.totalRounds) {
+        this._endGame();
+        return;
+      }
+    }
+
+    this._startTurn();
+  }
+
+  _endGame() {
+    this._clearTimers();
+    this.phase = PHASE.GAME_OVER;
+
+    const leaderboard = this.room.getPlayerList()
+      .sort((a, b) => b.score - a.score);
+
+    const winner = leaderboard[0] || null;
+
+    this.room.broadcast('game_over', {
+      winner,
+      leaderboard,
+    });
+  }
+
+  // ── Guessing ───────────────────────────────────────────────
+
+  checkGuess(text, playerId) {
+    if (this.phase !== PHASE.DRAWING) return false;
+    if (playerId === this.currentDrawerId) return false;
+
+    const player = this.room.getPlayerById(playerId);
+    if (!player || player.hasGuessedCorrectly) return false;
+
+    const normalized = text.trim().toLowerCase();
+    const wordNormalized = (this.currentWord || '').trim().toLowerCase();
+
+    if (normalized === wordNormalized) {
+      // Award points — diminishing by order of guessing
+      const basePoints = 300;
+      const penalty = this.correctGuessCount * 20;
+      const timeBonus = Math.floor((this.timeLeft / this.drawTime) * 100);
+      const pts = Math.max(50, basePoints - penalty + timeBonus);
+
+      player.addPoints(pts);
+      player.hasGuessedCorrectly = true;
+      player.guessedAt = Date.now();
+      this.correctGuessCount++;
+
+      // If all non-drawers guessed, end round early
+      const nonDrawers = Array.from(this.room.players.values()).filter(
+        p => p.id !== this.currentDrawerId
+      );
+      const allGuessed = nonDrawers.every(p => p.hasGuessedCorrectly);
+      if (allGuessed) {
+        setTimeout(() => this._endRound(), 2000);
+      }
+
+      return { correct: true, points: pts };
+    }
+
+    return { correct: false };
+  }
+
+  // ── Drawing ────────────────────────────────────────────────
+
+  addStroke(strokeData) {
+    this.strokes.push(strokeData);
+  }
+
+  clearCanvas() {
+    this.strokes = [];
+  }
+
+  undoLastStroke() {
+    // Remove strokes that belong to last pen-down → pen-up sequence
+    let i = this.strokes.length - 1;
+    while (i >= 0 && this.strokes[i].type !== 'start') i--;
+    if (i >= 0) this.strokes.splice(i);
+  }
+
+  // ── Helpers ────────────────────────────────────────────────
+
+  _makeBlank(word) {
+    return word
+      .split('')
+      .map(c => (c === ' ' ? ' ' : '_'))
+      .join('');
+  }
+
+  _makeHintDisplay() {
+    if (!this.currentWord) return '';
+    return this.currentWord
+      .split('')
+      .map((c, i) => {
+        if (c === ' ') return ' ';
+        if (this.revealedIndices.has(i)) return c;
+        return '_';
+      })
+      .join('');
+  }
+
+  getHintDisplay() {
+    return this._makeHintDisplay();
+  }
+
+  _clearTimers() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.wordChoiceTimeout) clearTimeout(this.wordChoiceTimeout);
+    this.hintIntervals.forEach(t => clearTimeout(t));
+    this.hintIntervals = [];
+    this.timerInterval = null;
+    this.wordChoiceTimeout = null;
+  }
+
+  isDrawer(playerId) {
+    return playerId === this.currentDrawerId;
+  }
+
+  toStateJSON() {
+    return {
+      phase: this.phase,
+      currentRound: this.currentRound,
+      totalRounds: this.totalRounds,
+      currentDrawerId: this.currentDrawerId,
+      timeLeft: this.timeLeft,
+      hint: this._makeHintDisplay(),
+      wordLength: this.currentWord ? this.currentWord.length : 0,
+      blankWord: this.currentWord ? this._makeBlank(this.currentWord) : '',
+      correctGuessCount: this.correctGuessCount,
+    };
+  }
+}
+
+Game.PHASE = PHASE;
+module.exports = Game;
