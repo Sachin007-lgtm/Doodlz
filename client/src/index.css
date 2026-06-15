@@ -104,8 +104,8 @@ body {
   height: 90vh; /* Fixed aspect ratio feel */
   max-height: 850px;
   min-height: 600px;
-  /* Completely transparent so it blends perfectly with the outside */
-  background: transparent;
+  /* Faint 2% opacity background tint */
+  background: rgba(28, 26, 39, 0.08);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   /* Two-layer border (white outer, black inner) */
