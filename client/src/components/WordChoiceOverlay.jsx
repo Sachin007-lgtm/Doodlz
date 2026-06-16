@@ -21,7 +21,7 @@ export default function WordChoiceOverlay({ wordOptions, drawerName, isDrawer })
                 const colors = [
                   { bg: 'var(--primary)', color: 'white' },
                   { bg: 'var(--secondary)', color: 'white' },
-                  { bg: 'var(--accent-yellow)', color: 'var(--ink-black)' },
+                  { bg: 'var(--accent-yellow)', color: 'var(--dark-text)' },
                 ]
                 const c = colors[i] || colors[0]
                 return (

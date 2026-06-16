@@ -72,68 +72,98 @@ export default function Canvas({ isDrawer }) {
 
       {/* Toolbar — only visible to drawer */}
       {isDrawer && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0 4px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '6px 4px', background: 'rgba(0,0,0,0.15)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.08)' }}>
           {/* Color palette */}
-          <div className="neo-card-sm" style={{ padding: '6px 8px', display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 248 }}>
-            {COLORS.map(c => (
-              <button key={c} title={c}
-                onClick={() => { setActiveColor(c); if (activeTool === 'eraser') setActiveTool('brush') }}
-                style={{
-                  width: 22, height: 22, borderRadius: '50%', background: c,
-                  border: activeColor === c && activeTool !== 'eraser' ? '3px solid var(--primary)' : '2px solid var(--ink-black)',
-                  cursor: 'pointer',
-                  transform: activeColor === c && activeTool !== 'eraser' ? 'scale(1.25)' : 'scale(1)',
-                  transition: 'transform 0.1s',
-                  outline: c === '#ffffff' ? '1px solid #ccc' : 'none',
-                  flexShrink: 0,
-                }} />
-            ))}
+          <div className="neo-card-sm" style={{ padding: '6px 8px', display: 'flex', flexWrap: 'wrap', gap: 4, maxWidth: 248, background: 'rgba(255, 255, 255, 0.04)' }}>
+            {COLORS.map(c => {
+              const isSelected = activeColor === c && activeTool !== 'eraser'
+              return (
+                <button key={c} title={c}
+                  onClick={() => { setActiveColor(c); if (activeTool === 'eraser') setActiveTool('brush') }}
+                  style={{
+                    width: 22, height: 22, borderRadius: '50%', background: c,
+                    border: isSelected ? '3px solid #ffffff' : '1.5px solid rgba(255,255,255,0.35)',
+                    cursor: 'pointer',
+                    transform: isSelected ? 'scale(1.3)' : 'scale(1)',
+                    boxShadow: isSelected ? `0 0 14px ${c}` : '0 2px 5px rgba(0,0,0,0.3)',
+                    transition: 'transform 0.15s, box-shadow 0.15s',
+                    outline: 'none',
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={e => { if(!isSelected) e.currentTarget.style.transform = 'scale(1.15)' }}
+                  onMouseLeave={e => { if(!isSelected) e.currentTarget.style.transform = 'scale(1)' }}
+                />
+              )
+            })}
           </div>
 
           {/* Tool buttons row */}
           <div style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
             {/* Pen / Eraser / Fill */}
-            {TOOLS.map(t => (
-              <div key={t.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                <button onClick={() => setActiveTool(t.id)} style={{
-                  width: 44, height: 44,
-                  background: activeTool === t.id ? 'var(--accent-yellow)' : 'var(--paper-white)',
-                  border: 'var(--border)', borderRadius: '12px 12px 4px 4px',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)',
-                }}>
-                  <span className="material-symbols-outlined" style={{ fontSize: 22 }}>{t.icon}</span>
-                </button>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--on-surface-variant)' }}>{t.label}</span>
-              </div>
-            ))}
+            {TOOLS.map(t => {
+              const isSelected = activeTool === t.id
+              return (
+                <div key={t.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <button onClick={() => setActiveTool(t.id)} style={{
+                    width: 44, height: 44,
+                    background: isSelected ? 'var(--accent-yellow)' : 'rgba(255,255,255,0.08)',
+                    border: isSelected ? '2px solid #ffffff' : '1.5px solid rgba(255,255,255,0.15)', 
+                    borderRadius: '12px',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: isSelected ? '0 0 10px rgba(255,225,109,0.4)' : '0 2px 6px rgba(0,0,0,0.15)', 
+                    transition: 'all 0.15s ease',
+                    transform: 'scale(1)',
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: 22, color: isSelected ? '#10002b' : '#ffffff', transition: 'color 0.15s' }}>{t.icon}</span>
+                  </button>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isSelected ? 'var(--accent-yellow)' : 'rgba(255,255,255,0.6)', fontWeight: isSelected ? 700 : 500 }}>{t.label}</span>
+                </div>
+              )
+            })}
 
             {/* Brush size */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, position: 'relative' }}>
               <button onClick={() => setSizeOpen(p => !p)} style={{
-                width: 44, height: 44, background: sizeOpen ? 'var(--primary-container)' : 'var(--paper-white)',
-                border: 'var(--border)', borderRadius: '12px 12px 4px 4px',
+                width: 44, height: 44, 
+                background: sizeOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.08)',
+                border: sizeOpen ? '2px solid var(--accent-yellow)' : '1.5px solid rgba(255,255,255,0.15)', 
+                borderRadius: '12px',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>line_weight</span>
+                boxShadow: sizeOpen ? '0 0 10px rgba(255,225,109,0.2)' : '0 2px 6px rgba(0,0,0,0.15)',
+                transition: 'all 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#ffffff' }}>line_weight</span>
               </button>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--on-surface-variant)' }}>Size</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: sizeOpen ? 'var(--accent-yellow)' : 'rgba(255,255,255,0.6)' }}>Size</span>
               {sizeOpen && (
                 <div className="neo-card-sm" style={{
                   position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-                  padding: '8px 14px', display: 'flex', gap: 12, marginBottom: 6, zIndex: 30,
+                  padding: '10px 14px', display: 'flex', gap: 12, marginBottom: 8, zIndex: 30,
                   alignItems: 'center', whiteSpace: 'nowrap',
+                  background: '#181524',
+                  border: '1.5px solid rgba(255,255,255,0.15)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)'
                 }}>
                   {SIZES.map(s => (
                     <button key={s} title={`${s}px`}
                       onClick={() => { setBrushSize(s); setSizeOpen(false) }}
                       style={{
                         width: Math.max(s + 8, 18), height: Math.max(s + 8, 18),
-                        borderRadius: '50%', background: 'var(--ink-black)',
-                        border: brushSize === s ? '3px solid var(--primary)' : '2px solid transparent',
+                        borderRadius: '50%', background: '#ffffff',
+                        border: brushSize === s ? '3.5px solid var(--accent-yellow)' : '2px solid transparent',
                         cursor: 'pointer', flexShrink: 0,
-                      }} />
+                        transition: 'transform 0.1s',
+                        boxShadow: brushSize === s ? '0 0 8px var(--accent-yellow)' : 'none'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.2)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                    />
                   ))}
                 </div>
               )}
@@ -142,27 +172,35 @@ export default function Canvas({ isDrawer }) {
             {/* Undo */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
               <button onClick={undoStroke} style={{
-                width: 44, height: 44, background: 'var(--paper-white)',
-                border: 'var(--border)', borderRadius: '12px 12px 4px 4px',
+                width: 44, height: 44, background: 'rgba(255,255,255,0.08)',
+                border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: '12px',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>undo</span>
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                transition: 'all 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#ffffff' }}>undo</span>
               </button>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--on-surface-variant)' }}>Undo</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(255,255,255,0.6)' }}>Undo</span>
             </div>
 
             {/* Clear */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
               <button onClick={clearCanvas} style={{
-                width: 44, height: 44, background: 'var(--paper-white)',
-                border: 'var(--border)', borderRadius: '12px 12px 4px 4px',
+                width: 44, height: 44, background: 'rgba(255,255,255,0.08)',
+                border: '1.5px solid rgba(255,255,255,0.15)', borderRadius: '12px',
                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: 'var(--shadow-sm)',
-              }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>delete</span>
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                transition: 'all 0.15s ease',
+              }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#ffffff' }}>delete</span>
               </button>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--on-surface-variant)' }}>Clear</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(255,255,255,0.6)' }}>Clear</span>
             </div>
           </div>
         </div>

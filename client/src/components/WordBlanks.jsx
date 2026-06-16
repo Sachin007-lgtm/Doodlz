@@ -23,7 +23,7 @@ export default function WordBlanks({ hint, blankWord, isDrawer, currentWord }) {
             fontWeight: 800,
             borderBottom: '3px solid var(--ink-black)',
             margin: '0 1px',
-            color: isDrawer ? 'var(--primary)' : revealed ? 'var(--primary)' : 'transparent',
+            color: isDrawer ? 'var(--accent-yellow)' : revealed ? 'var(--accent-yellow)' : 'transparent',
             transition: 'color 0.3s',
           }}>
             {ch === '_' ? '\u00A0' : ch}

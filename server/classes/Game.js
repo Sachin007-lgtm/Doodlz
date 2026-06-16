@@ -73,7 +73,30 @@ class Game {
     }
 
     this.phase = PHASE.WORD_SELECTION;
-    this.wordOptions = getRandomWords(this.wordCount);
+    
+    let choices = [];
+    const settings = this.room.settings || {};
+    if (settings.wordMode === 'custom' && settings.customWords) {
+      const customPool = settings.customWords
+        .split(',')
+        .map(w => w.trim())
+        .filter(w => w.length > 0);
+      if (customPool.length > 0) {
+        const shuffledCustom = [...customPool].sort(() => Math.random() - 0.5);
+        choices = shuffledCustom.slice(0, this.wordCount);
+      }
+    }
+
+    if (choices.length === 0) {
+      choices = getRandomWords(this.wordCount);
+    } else if (choices.length < this.wordCount) {
+      const extraCount = this.wordCount - choices.length;
+      const standardExtra = getRandomWords(extraCount * 2)
+        .filter(w => !choices.includes(w))
+        .slice(0, extraCount);
+      choices = [...choices, ...standardExtra];
+    }
+    this.wordOptions = choices;
 
     // Send word choices only to drawer
     const drawerSocket = drawer.socketId;
@@ -288,18 +311,22 @@ class Game {
   // ── Drawing ────────────────────────────────────────────────
 
   addStroke(strokeData) {
+    if (strokeData.type === 'start' || strokeData.type === 'fill') {
+      this.currentStrokeId = (this.currentStrokeId || 0) + 1;
+    }
+    strokeData.strokeId = this.currentStrokeId || 1;
     this.strokes.push(strokeData);
   }
 
   clearCanvas() {
     this.strokes = [];
+    this.currentStrokeId = 0;
   }
 
   undoLastStroke() {
-    // Remove strokes that belong to last pen-down → pen-up sequence
-    let i = this.strokes.length - 1;
-    while (i >= 0 && this.strokes[i].type !== 'start') i--;
-    if (i >= 0) this.strokes.splice(i);
+    if (this.strokes.length === 0) return;
+    const lastStrokeId = this.strokes[this.strokes.length - 1].strokeId;
+    this.strokes = this.strokes.filter(s => s.strokeId !== lastStrokeId);
   }
 
   // ── Helpers ────────────────────────────────────────────────

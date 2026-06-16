@@ -14,6 +14,10 @@ class Room {
       wordCount: settings.wordCount || 3,
       isPublic: settings.isPublic !== undefined ? settings.isPublic : true,
       wordMode: settings.wordMode || 'standard',
+      language: settings.language || 'English',
+      gameMode: settings.gameMode || 'Normal',
+      hints: settings.hints !== undefined ? settings.hints : 2,
+      customWords: settings.customWords || '',
     };
     this.game = null;           // set by Game class
     this.createdAt = Date.now();

@@ -45,7 +45,7 @@ export default function LobbyPage() {
   const emptySlots = Math.max(0, (settings.maxPlayers || 8) - players.length)
 
   return (
-    <div className="dotted-bg" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       <header className="app-header">
         <span className="logo">Doodlz</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--secondary-container)', padding: '5px 14px', border: 'var(--border-2)', borderRadius: 20 }}>
@@ -64,15 +64,23 @@ export default function LobbyPage() {
         {/* Left */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Room code */}
-          <div className="neo-card" style={{ padding: '16px 24px', textAlign: 'center' }}>
-            <p className="text-label" style={{ color: 'var(--secondary)', marginBottom: 4 }}>Room Code</p>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(28px,5vw,48px)', fontWeight: 900, color: 'var(--ink-black)', letterSpacing: '0.1em', cursor: 'pointer' }}
-              onClick={copyCode} title="Click to copy">
-              #{roomId}
-            </h1>
-            <p style={{ fontSize: 13, color: 'var(--on-surface-variant)', marginTop: 4 }}>
-              {copied ? '✅ Copied!' : `${players.length}/${settings.maxPlayers} players • Share this code to invite friends`}
-            </p>
+          <div className="neo-card" style={{ padding: '10px 20px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+            <div>
+              <p className="text-label" style={{ color: 'var(--secondary)', marginBottom: 2, fontSize: 10 }}>Invite Friends</p>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px,3.5vw,34px)', fontWeight: 900, color: 'var(--ink-black)', letterSpacing: '0.1em', cursor: 'pointer', margin: 0 }}
+                onClick={copyCode} title="Click to copy">
+                #{roomId}
+              </h1>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+              <p style={{ fontSize: 11, color: 'var(--on-surface-variant)', margin: 0 }}>
+                {copied ? '✅ Copied!' : `${players.length}/${settings.maxPlayers} players in lobby`}
+              </p>
+              <button className="btn btn-ghost" style={{ padding: '4px 10px', fontSize: 11, borderRadius: 6, height: 'auto' }} onClick={copyCode}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{copied ? 'check' : 'content_copy'}</span>
+                {copied ? 'Copied' : 'Copy Code'}
+              </button>
+            </div>
           </div>
 
           {/* Player grid */}

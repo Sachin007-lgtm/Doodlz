@@ -24,7 +24,7 @@ const howToPlaySteps = [
   },
   {
     title: '3. SEE WHAT HAPPENED',
-    desc: "Watch the hilarious results of the telephone game.",
+    desc: "Watch the hilarious results of this Doodlz game.",
     icon: 'auto_awesome',
     color: '#000000'
   }
@@ -32,7 +32,9 @@ const howToPlaySteps = [
 
 // Neo-brutalist input/select styles
 const neoLabel = { display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#555555', marginBottom: 5, fontWeight: 800 }
+const neoLabelCompact = { display: 'inline-block', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase', color: '#000000', fontWeight: 800, margin: 0 }
 const neoSelect = { width: '100%', border: '3px solid #000000', background: '#ffffff', color: '#000000', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 13, outline: 'none', cursor: 'pointer', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000' }
+const neoSelectCompact = { width: '160px', border: '3px solid #000000', background: '#ffffff', color: '#000000', borderRadius: 4, padding: '4px 8px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 12, outline: 'none', cursor: 'pointer', boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000' }
 const neoInput = { width: '100%', border: '3px solid #000000', background: '#ffffff', color: '#000000', borderRadius: 4, padding: '8px 10px', fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14, outline: 'none', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', boxSizing: 'border-box' }
 
 // Chunky button press handler
@@ -50,13 +52,19 @@ export default function HomePage() {
   const [loading,    setLoading]    = useState('')
   const [avatarSeed, setAvatarSeed] = useState(randomSeed)
   const [howToPlayStep, setHowToPlayStep] = useState(0)
+  const [isHoveringHelp, setIsHoveringHelp] = useState(false)
+  const [iconAnimKey, setIconAnimKey] = useState(0)
 
   // Room settings (integrated from CreateRoomPage)
   const [maxPlayers, setMaxPlayers] = useState(8)
   const [rounds, setRounds] = useState(3)
-  const [drawTime, setDrawTime] = useState(60)
+  const [drawTime, setDrawTime] = useState(80)
   const [wordCount, setWordCount] = useState(3)
   const [wordMode, setWordMode] = useState('standard')
+  const [language, setLanguage] = useState('English')
+  const [gameMode, setGameMode] = useState('Normal')
+  const [hints, setHints] = useState(2)
+  const [customWords, setCustomWords] = useState('')
 
   // Navigate once room state is set by GameContext
   useEffect(() => {
@@ -71,13 +79,16 @@ export default function HomePage() {
     return true
   }
 
-  const handleCreateRoom = () => {
+  const handleCreateRoom = (isInvite = false) => {
     if (!validate()) return
     setLoading('create')
+    if (isInvite) {
+      sessionStorage.setItem('copy_invite', 'true')
+    }
     socket.emit('create_room', {
       playerName: playerName.trim(),
       avatarSeed,
-      settings: { maxPlayers, rounds, drawTime, wordCount, wordMode, isPublic: false },
+      settings: { maxPlayers, rounds, drawTime, wordCount, wordMode, language, gameMode, hints, customWords, isPublic: false },
     })
   }
 
@@ -90,11 +101,23 @@ export default function HomePage() {
 
   const handleNextStep = () => {
     setHowToPlayStep((prev) => (prev + 1) % howToPlaySteps.length)
+    setIconAnimKey(k => k + 1)
   }
 
   const handlePrevStep = () => {
     setHowToPlayStep((prev) => (prev - 1 + howToPlaySteps.length) % howToPlaySteps.length)
+    setIconAnimKey(k => k + 1)
   }
+
+  // Auto-advance carousel every 3s, pause when hovering
+  useEffect(() => {
+    if (isHoveringHelp) return
+    const timer = setInterval(() => {
+      setHowToPlayStep(prev => (prev + 1) % howToPlaySteps.length)
+      setIconAnimKey(k => k + 1)
+    }, 3000)
+    return () => clearInterval(timer)
+  }, [isHoveringHelp])
 
   return (
     <div className="page-wrapper" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -117,28 +140,33 @@ export default function HomePage() {
           muted 
           playsInline
           style={{ 
-            height: '240px', 
+            height: '270px', 
             objectFit: 'contain', 
             filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.6))', 
-            marginTop: '-40px',
+            marginTop: '-55px',
             marginLeft: '-10px',
-            marginBottom: '-20px',
+            marginBottom: '-38px',
             display: 'block'
           }} 
         />
       </div>
 
       {/* Main Dual-Panel Area */}
-      <main style={{ flex: 1, padding: '0 20px 20px', maxWidth: 1000, margin: '-20px auto 0', width: '100%', position: 'relative', zIndex: 10 }}>
+      <main style={{ flex: 1, padding: '0 20px 40px', maxWidth: 1000, margin: '0 auto 0', width: '100%', position: 'relative', zIndex: 10 }}>
         
         {/* Swapping Container */}
-        <div style={{ position: 'relative', width: '100%', height: 440 }}>
+        <div style={{ position: 'relative', width: '100%', height: 460 }}>
 
           {/* Panel 1: Forms & Settings */}
           <div style={{ 
-            position: 'absolute', top: 0, left: 0, width: 'calc(50% - 12px)', height: '100%', 
+            position: 'absolute', 
+            top: activeTab === 'createRoom' ? -165 : 0, 
+            left: 0, 
+            width: 'calc(50% - 12px)', 
+            height: activeTab === 'createRoom' ? 630 : '100%', 
             transform: activeTab === 'anonymous' ? 'translateX(0)' : 'translateX(calc(100% + 24px))',
-            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: activeTab === 'anonymous' ? 2 : 1
+            transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), top 0.5s cubic-bezier(0.4, 0, 0.2, 1), height 0.5s cubic-bezier(0.4, 0, 0.2, 1)', 
+            zIndex: activeTab === 'anonymous' ? 2 : 1
           }}>
              <div className="folder-tabs-container" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* Tabs Header */}
@@ -148,40 +176,45 @@ export default function HomePage() {
                 </div>
                 
                 {/* Panel Content */}
-                <div className="folder-content" style={{ justifyContent: 'space-between', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+                <div className="folder-content" style={{ justifyContent: 'flex-start', flex: 1, minHeight: 0, overflowY: 'auto', padding: activeTab === 'createRoom' ? '10px 16px' : '16px 20px', gap: activeTab === 'createRoom' ? 0 : undefined }}>
                   
                   {activeTab === 'anonymous' ? (
-                    <>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, gap: 24, padding: '10px 0' }}>
                       {/* Stacked Avatar & Inputs Area */}
-                      <div style={{ display: 'flex', gap: 20, marginBottom: 20, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 20, alignItems: 'center', position: 'relative', top: -25 }}>
                         {/* Avatar (Left) */}
-                        <div style={{ position: 'relative', flexShrink: 0 }}>
-                          <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 140, height: 140, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
-                          />
-                          <button
-                            onClick={() => setAvatarSeed(randomSeed())}
-                            title="Get a new avatar!"
-                            style={{
-                              position: 'absolute', bottom: 5, right: 5,
-                              width: 36, height: 36, borderRadius: '50%',
-                              background: '#ffffff', border: '3px solid #000000',
-                              boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000', cursor: 'pointer',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              transition: 'transform 0.2s',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
-                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
-                          >
-                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#000000', fontWeight: 'bold' }}>refresh</span>
-                          </button>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <div style={{ position: 'relative' }}>
+                            <img src={avatarUrl(avatarSeed)} alt="Your avatar"
+                              style={{ width: 160, height: 160, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
+                            />
+                            <button
+                              onClick={() => setAvatarSeed(randomSeed())}
+                              title="Get a new avatar!"
+                              style={{
+                                position: 'absolute', bottom: 5, right: 5,
+                                width: 42, height: 42, borderRadius: '50%',
+                                background: '#ffffff', border: '3px solid #000000',
+                                boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                transition: 'transform 0.2s',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
+                              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+                            >
+                              <span className="material-symbols-outlined" style={{ fontSize: 22, color: '#000000', fontWeight: 'bold' }}>refresh</span>
+                            </button>
+                          </div>
+                          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, color: '#000000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            Choose a character
+                          </span>
                         </div>
 
                         {/* Name & Code Inputs stacked (Right) */}
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
                           <div>
                             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, marginBottom: 6, color: '#000000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Choose a character & nickname
+                              Nickname
                             </p>
                             <input
                               className="input"
@@ -190,7 +223,7 @@ export default function HomePage() {
                               onChange={e => setPlayerName(e.target.value)}
                               maxLength={20}
                               onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                              style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: 250, boxSizing: 'border-box', color: '#000000' }}
+                              style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: 200, boxSizing: 'border-box', color: '#000000' }}
                             />
                           </div>
 
@@ -205,52 +238,52 @@ export default function HomePage() {
                               onChange={e => setJoinCode(e.target.value.toUpperCase())}
                               maxLength={8}
                               onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                              style={{ letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', boxSizing: 'border-box', color: '#000000', width: 250 }}
+                              style={{ letterSpacing: '0.1em', fontWeight: 800, fontSize: 14, textAlign: 'center', padding: '10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', boxSizing: 'border-box', color: '#000000', width: 200 }}
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Join Button (Bottom) */}
-                      <button className="btn" style={{ width: '100%', fontSize: 16, padding: '12px 0', borderRadius: 8, background: '#a78bfa', color: '#000000', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', fontWeight: 900, transition: 'all 0.1s', marginTop: 'auto' }}
+                      <button className="btn" style={{ width: '100%', fontSize: 16, padding: '12px 0', borderRadius: 8, background: '#a78bfa', color: '#000000', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', fontWeight: 900, transition: 'all 0.1s' }}
                         onClick={handleJoin} disabled={loading === 'join'}
                         onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
                       >
                         <span className="material-symbols-outlined" style={{ fontSize: 22, marginRight: 8, verticalAlign: 'middle' }}>login</span>
                         {loading === 'join' ? 'JOINING…' : 'JOIN ROOM'}
                       </button>
-                    </>
+                    </div>
                   ) : (
                     /* Create Room Tab Content */
-                    <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       {/* Avatar & Nickname Selection */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
                         {/* Avatar */}
                         <div style={{ position: 'relative', flexShrink: 0 }}>
                           <img src={avatarUrl(avatarSeed)} alt="Your avatar"
-                            style={{ width: 140, height: 140, borderRadius: '50%', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', background: 'var(--secondary-container)' }}
+                            style={{ width: 100, height: 100, borderRadius: '50%', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 3px 3px 0px #000000', background: 'var(--secondary-container)' }}
                           />
                           <button
                             onClick={() => setAvatarSeed(randomSeed())}
                             title="Get a new avatar!"
                             style={{
-                              position: 'absolute', bottom: 5, right: 5,
-                              width: 36, height: 36, borderRadius: '50%',
-                              background: '#ffffff', border: '3px solid #000000',
-                              boxShadow: 'inset 0 0 0 1px #ffffff, 2px 2px 0px #000000', cursor: 'pointer',
+                              position: 'absolute', bottom: 0, right: 0,
+                              width: 32, height: 32, borderRadius: '50%',
+                              background: '#ffffff', border: '2px solid #000000',
+                              boxShadow: 'inset 0 0 0 1px #ffffff, 1.5px 1.5px 0px #000000', cursor: 'pointer',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               transition: 'transform 0.2s',
                             }}
                             onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
                             onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
                           >
-                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#000000', fontWeight: 'bold' }}>refresh</span>
+                            <span className="material-symbols-outlined" style={{ fontSize: 16, color: '#000000', fontWeight: 'bold' }}>refresh</span>
                           </button>
                         </div>
 
                         {/* Name Input */}
-                        <div style={{ flex: 1 }}>
-                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 4, color: '#000000', textTransform: 'uppercase' }}>
+                        <div style={{ width: 200 }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12, marginBottom: 4, color: '#000000', textTransform: 'uppercase', lineHeight: 1.2 }}>
                             Choose a character<br/>and a nickname
                           </p>
                           <input
@@ -259,69 +292,135 @@ export default function HomePage() {
                             value={playerName}
                             onChange={e => setPlayerName(e.target.value)}
                             maxLength={20}
-                            onKeyDown={e => e.key === 'Enter' && handleCreateRoom()}
-                            style={{ fontSize: 14, fontWeight: 700, padding: '10px 12px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000', width: 250, boxSizing: 'border-box', color: '#000000' }}
+                            onKeyDown={e => e.key === 'Enter' && handleCreateRoom(false)}
+                            style={{ fontSize: 13, fontWeight: 700, padding: '6px 10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 2.5px 2.5px 0px #000000', width: '100%', maxWidth: 200, boxSizing: 'border-box', color: '#000000' }}
                           />
                         </div>
                       </div>
 
                       {/* Room Settings Section */}
-                      <div style={{ marginBottom: 12 }}>
-                        <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, marginBottom: 8, color: '#000000', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>settings</span>
-                          Room Settings
-                        </p>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                          <div>
-                            <label style={neoLabel}>Players</label>
-                            <select value={maxPlayers} onChange={e => setMaxPlayers(+e.target.value)} style={neoSelect}>
-                              {[2,4,6,8,10,12].map(n => <option key={n} value={n}>{n}</option>)}
+                      <div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {/* Players */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>groups</span>
+                              <span style={neoLabelCompact}>Players</span>
+                            </div>
+                            <select value={maxPlayers} onChange={e => setMaxPlayers(+e.target.value)} style={neoSelectCompact}>
+                              {[2,4,6,8,10,12,16].map(n => <option key={n} value={n}>{n}</option>)}
                             </select>
                           </div>
-                          <div>
-                            <label style={neoLabel}>Rounds</label>
-                            <select value={rounds} onChange={e => setRounds(+e.target.value)} style={neoSelect}>
-                              {[2,3,5,8,10].map(n => <option key={n} value={n}>{n}</option>)}
+
+                          {/* Language */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>translate</span>
+                              <span style={neoLabelCompact}>Language</span>
+                            </div>
+                            <select value={language} onChange={e => setLanguage(e.target.value)} style={neoSelectCompact}>
+                              {['English', 'Spanish', 'French', 'German', 'Portuguese', 'Italian'].map(l => <option key={l} value={l}>{l}</option>)}
                             </select>
                           </div>
-                          <div>
-                            <label style={neoLabel}>Draw Time (s)</label>
-                            <input type="number" min={15} max={240} step={15} value={drawTime}
-                              onChange={e => setDrawTime(+e.target.value)} style={neoInput} />
+
+                          {/* Drawtime */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>schedule</span>
+                              <span style={neoLabelCompact}>Drawtime</span>
+                            </div>
+                            <select value={drawTime} onChange={e => setDrawTime(+e.target.value)} style={neoSelectCompact}>
+                              {[15,30,45,60,80,100,120,150,180,240].map(t => <option key={t} value={t}>{t}</option>)}
+                            </select>
                           </div>
-                          <div>
-                            <label style={neoLabel}>Word Choices</label>
-                            <input type="number" min={1} max={5} value={wordCount}
-                              onChange={e => setWordCount(+e.target.value)} style={neoInput} />
+
+                          {/* Rounds */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>loop</span>
+                              <span style={neoLabelCompact}>Rounds</span>
+                            </div>
+                            <select value={rounds} onChange={e => setRounds(+e.target.value)} style={neoSelectCompact}>
+                              {[2,3,4,5,6,8,10].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+
+                          {/* Word Count */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>notes</span>
+                              <span style={neoLabelCompact}>Word Count</span>
+                            </div>
+                            <select value={wordCount} onChange={e => setWordCount(+e.target.value)} style={neoSelectCompact}>
+                              {[1,2,3,4,5].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
+                          </div>
+
+                          {/* Hints */}
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000', fontWeight: 'bold' }}>help</span>
+                              <span style={neoLabelCompact}>Hints</span>
+                            </div>
+                            <select value={hints} onChange={e => setHints(+e.target.value)} style={neoSelectCompact}>
+                              {[0,1,2].map(n => <option key={n} value={n}>{n}</option>)}
+                            </select>
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                          {['standard', 'custom'].map(m => (
-                            <button key={m} onClick={() => setWordMode(m)} style={{
-                              flex: 1, padding: '7px 0',
-                              background: wordMode === m ? '#facc15' : '#ffffff',
-                              color: '#000000',
-                              border: '3px solid #000000', borderRadius: 4,
-                              fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 12,
-                              cursor: 'pointer', textTransform: 'uppercase',
-                              boxShadow: wordMode === m ? 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000' : 'inset 0 0 0 2px #ffffff, 2px 2px 0px #000000',
-                              transition: 'all 0.15s',
-                            }}>
-                              {m}
-                            </button>
-                          ))}
+
+                        {/* Custom words title & Checkbox */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, marginBottom: 4 }}>
+                          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 13, color: '#000000', textTransform: 'uppercase' }}>
+                            Custom words
+                          </span>
+                          <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                            <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, color: '#000000', textTransform: 'uppercase' }}>
+                              Use custom words only
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={wordMode === 'custom'}
+                              onChange={e => setWordMode(e.target.checked ? 'custom' : 'standard')}
+                              style={{ width: 16, height: 16, cursor: 'pointer' }}
+                            />
+                          </label>
                         </div>
+
+                        {/* Custom words textarea */}
+                        <textarea
+                          placeholder="Minimum of 10 words. 1-32 characters per word! 20000 characters maximum. Separated by a , (comma)"
+                          value={customWords}
+                          onChange={e => setCustomWords(e.target.value)}
+                          style={{
+                            width: '100%',
+                            height: 95,
+                            padding: '8px 10px',
+                            border: '3px solid #000000',
+                            borderRadius: 4,
+                            background: '#ffffff',
+                            color: '#000000',
+                            fontFamily: 'var(--font-body)',
+                            fontWeight: 700,
+                            fontSize: 12,
+                            outline: 'none',
+                            boxShadow: 'inset 0 0 0 2px #ffffff, 3px 3px 0px #000000',
+                            boxSizing: 'border-box',
+                            resize: 'none'
+                          }}
+                        />
                       </div>
 
-                      {/* Start Room Button */}
-                      <button className="btn" style={{ width: '100%', fontSize: 16, padding: '10px 0', borderRadius: 8, background: '#4ade80', color: '#000000', border: '4px solid #000000', boxShadow: 'inset 0 0 0 2px #ffffff, 4px 4px 0px #000000', fontWeight: 900, transition: 'all 0.1s', marginTop: 'auto' }}
-                        onClick={handleCreateRoom}
-                        onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
-                      >
-                        <span className="material-symbols-outlined" style={{ fontSize: 22, marginRight: 8, verticalAlign: 'middle' }}>rocket_launch</span>
-                        {loading === 'create' ? 'CREATING…' : 'START ROOM'}
-                      </button>
-                    </>
+                      {/* Action Buttons */}
+                      <div style={{ display: 'flex' }}>
+                        {/* Start Room Button */}
+                        <button className="btn" style={{ width: '100%', fontSize: 15, padding: '8px 0', borderRadius: 8, background: '#4ade80', color: '#000000', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 3px 3px 0px #000000', fontWeight: 900, transition: 'all 0.1s' }}
+                          onClick={() => handleCreateRoom(false)}
+                          onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
+                        >
+                          {loading === 'create' ? 'CREATING…' : 'Start!'}
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                 </div>
@@ -336,48 +435,63 @@ export default function HomePage() {
             display: 'flex', flexDirection: 'column', gap: 16
           }}>
              {/* How To Play Card */}
-             <div className="folder-content" style={{ flex: 1, marginTop: 38 }}>
-                <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: '#000000', textAlign: 'center', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  How To Play
-                </h2>
-                
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                  <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                    <span className="material-symbols-outlined" style={{ fontSize: 64, color: howToPlaySteps[howToPlayStep].color, marginBottom: 12 }}>
-                      {howToPlaySteps[howToPlayStep].icon}
-                    </span>
-                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 900, marginBottom: 6, color: '#000000' }}>
-                      {howToPlaySteps[howToPlayStep].title}
-                    </h3>
-                    <p style={{ color: '#333333', fontSize: 14, fontWeight: 600, maxWidth: 240, margin: '0 auto', lineHeight: 1.4 }}>
-                      {howToPlaySteps[howToPlayStep].desc}
-                    </p>
-                  </div>
-                </div>
+              <div
+                className="folder-content interactive-help-card"
+                style={{ flex: 1, marginTop: 58 }}
+                onMouseEnter={() => setIsHoveringHelp(true)}
+                onMouseLeave={() => setIsHoveringHelp(false)}
+              >
+                 <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, color: '#000000', textAlign: 'center', marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                   How To Play
+                 </h2>
 
-                {/* Carousel Indicators */}
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginTop: 16 }}>
-                  <span className="material-symbols-outlined" onClick={handlePrevStep}
-                    style={{ color: '#000000', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
-                    navigate_before
-                  </span>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    {howToPlaySteps.map((_, index) => (
-                      <span key={index} onClick={() => setHowToPlayStep(index)}
-                        style={{ 
-                          width: index === howToPlayStep ? 14 : 8, height: index === howToPlayStep ? 14 : 8, 
-                          borderRadius: '50%', border: '3px solid #000000',
-                          background: index === howToPlayStep ? '#000000' : 'transparent',
-                          cursor: 'pointer', transition: 'all 0.2s ease-in-out'
-                        }} />
-                    ))}
-                  </div>
-                  <span className="material-symbols-outlined" onClick={handleNextStep}
-                    style={{ color: '#000000', fontSize: 28, cursor: 'pointer', userSelect: 'none', fontWeight: 'bold' }}>
-                    navigate_next
-                  </span>
-                </div>
-             </div>
+                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                   <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                     {/* Icon emblem — animates on step change */}
+                     <div key={iconAnimKey} className="icon-emblem step-change">
+                       <span className="material-symbols-outlined help-icon">
+                         {howToPlaySteps[howToPlayStep].icon}
+                       </span>
+                     </div>
+                     <h3 key={`title-${iconAnimKey}`} className="step-text-animate"
+                       style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 900, marginBottom: 6, color: '#000000' }}>
+                       {howToPlaySteps[howToPlayStep].title}
+                     </h3>
+                     <p key={`desc-${iconAnimKey}`} className="step-text-animate"
+                       style={{ color: '#555555', fontSize: 13, fontWeight: 600, maxWidth: 230, margin: '0 auto', lineHeight: 1.5 }}>
+                       {howToPlaySteps[howToPlayStep].desc}
+                     </p>
+                   </div>
+                 </div>
+
+                 {/* Controls + Progress Bar */}
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14 }}>
+                   <button className="carousel-btn" onClick={handlePrevStep}>
+                     <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000' }}>navigate_before</span>
+                   </button>
+
+                   {/* Segmented progress bar */}
+                   <div className="help-progress-bar" style={{ flex: 1 }}>
+                     {howToPlaySteps.map((_, i) => (
+                       <div
+                         key={i}
+                         className={`help-progress-segment ${i === howToPlayStep ? 'active' : ''}`}
+                         onClick={() => { setHowToPlayStep(i); setIconAnimKey(k => k + 1) }}
+                         style={{ cursor: 'pointer' }}
+                       />
+                     ))}
+                   </div>
+
+                   <button className="carousel-btn" onClick={handleNextStep}>
+                     <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#000000' }}>navigate_next</span>
+                   </button>
+                 </div>
+
+                 {/* Auto-play hint */}
+                 <p style={{ textAlign: 'center', fontSize: 10, fontFamily: 'var(--font-mono)', color: '#aaaaaa', marginTop: 8, letterSpacing: '0.05em' }}>
+                   {isHoveringHelp ? 'PAUSED' : 'AUTO ▶'}
+                 </p>
+              </div>
 
              {/* Decorative Quote Card (like PEBLO) */}
              <div style={{
