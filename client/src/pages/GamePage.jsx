@@ -65,15 +65,21 @@ export default function GamePage() {
     }
   }, [roomId])
 
-  // Dynamically expand container width for game play page only
+  // Dynamically expand container width and height for game play page only
   useEffect(() => {
     const container = document.querySelector('.app-container')
     if (container) {
       container.style.maxWidth = '1250px'
+      container.style.height = '92vh'
+      container.style.maxHeight = '860px'
+      container.style.minHeight = '650px'
     }
     return () => {
       if (container) {
         container.style.maxWidth = ''
+        container.style.height = ''
+        container.style.maxHeight = ''
+        container.style.minHeight = ''
       }
     }
   }, [])
