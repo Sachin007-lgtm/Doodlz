@@ -136,6 +136,8 @@ export function useCanvas({ isDrawer, canvasRef, activeTool, activeColor, brushS
     if (!socket) return
     const canvas = canvasRef.current
 
+    socket.emit('request_canvas_history')
+
     const onDraw = (d) => {
       if (!canvas) return
       const ctx = canvas.getContext('2d')

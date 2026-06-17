@@ -28,7 +28,7 @@
   /* Text & Inks */
   --ink-black: #ffffff; /* Re-mapped for dark theme borders and text */
   --dark-text: #10002b; /* Explicit dark text for bright buttons */
-  --paper-white: rgba(255, 255, 255, 0.08); /* Translucent overlay */
+  --paper-white: rgba(18, 16, 26, 0.85); /* Rich translucent dark overlay */
   --error: #ff4d4d;
   --error-container: rgba(255, 77, 77, 0.2);
 
@@ -69,6 +69,61 @@
 
   /* Transitions */
   --transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  /* Custom Theme Backgrounds */
+  --sidebar-bg: #12101a;
+  --chat-bg: #12101a;
+  --header-bg: rgba(0, 0, 0, 0.2);
+  --list-bg: rgba(0, 0, 0, 0.2);
+
+  /* Logo Color */
+  --logo-color: #ffffff;
+
+  /* Word Blank Colors */
+  --word-blank-color: var(--accent-yellow);
+  --word-badge-color: var(--accent-yellow);
+  --word-badge-bg: rgba(0, 0, 0, 0.2);
+  --word-badge-border: 1.5px solid rgba(255, 255, 255, 0.1);
+
+  /* Timer Colors */
+  --timer-bg-safe: rgba(0, 250, 154, 0.15);
+  --timer-fg-safe: #00FA9A;
+  --timer-border-safe: #00FA9A;
+  --timer-bg-warn: rgba(255, 225, 109, 0.15);
+  --timer-fg-warn: #ffe16d;
+  --timer-border-warn: #ffe16d;
+  --timer-bg-danger: rgba(255, 77, 77, 0.2);
+  --timer-fg-danger: #ff4d4d;
+  --timer-border-danger: #ff4d4d;
+
+  /* Leaderboard Rank Colors */
+  --rank-1-color: #ffe16d;
+  --rank-2-color: #d1d5db;
+  --rank-3-color: #b45309;
+  --rank-other-color: var(--on-surface-variant);
+
+  /* Leaderboard Row Backgrounds */
+  --row-correct-bg: #0c2b1d;
+  --row-correct-fg: var(--success-mint);
+  --row-me-bg: rgba(0, 180, 216, 0.1);
+  --row-even-bg: rgba(255, 255, 255, 0.04);
+  --row-odd-bg: rgba(0, 0, 0, 0.15);
+  
+  /* Overlay Scores */
+  --overlay-score-color: var(--primary-light);
+
+  /* Canvas Section & Toolbar Colors */
+  --canvas-section-bg: transparent;
+  --toolbar-bg: rgba(0, 0, 0, 0.2);
+  --toolbar-border: 1px solid rgba(255, 255, 255, 0.08);
+  --tool-btn-bg: rgba(255, 255, 255, 0.08);
+  --tool-btn-border: 1.5px solid rgba(255, 255, 255, 0.15);
+  --tool-btn-fg: #ffffff;
+  --tool-btn-label: rgba(255, 255, 255, 0.6);
+  --tool-btn-selected-border: 2px solid #ffffff;
+  --size-popup-bg: #181524;
+  --size-popup-border: 1.5px solid rgba(255, 255, 255, 0.15);
+  --size-popup-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Reset ─────────────────────────────────────────────────── */
@@ -101,9 +156,9 @@ body {
 .app-container {
   width: 100%;
   max-width: 1100px;
-  height: 90vh; /* Fixed aspect ratio feel */
-  max-height: 850px;
-  min-height: 600px;
+  height: 80vh; /* Snug height, fits well without empty spaces */
+  max-height: 550px;
+  min-height: 560px;
   /* Faint 2% opacity background tint */
   background: rgba(251, 251, 254, 0.1);
   backdrop-filter: none;
@@ -248,7 +303,7 @@ body {
   font-family: var(--font-display);
   font-size: clamp(32px, 6vw, 48px);
   font-weight: 900;
-  color: #ffffff;
+  color: var(--logo-color, #ffffff);
   text-transform: uppercase;
   letter-spacing: -0.02em;
   font-style: italic;
@@ -279,9 +334,9 @@ body {
   text-transform: uppercase;
   white-space: nowrap;
 }
-.chip-mint   { background: var(--success-mint);      color: var(--ink-black); }
-.chip-cyan   { background: var(--secondary-fixed);   color: var(--ink-black); }
-.chip-yellow { background: var(--accent-yellow);     color: var(--ink-black); }
+.chip-mint   { background: var(--success-mint);      color: var(--dark-text); }
+.chip-cyan   { background: var(--secondary-fixed);   color: var(--dark-text); }
+.chip-yellow { background: var(--accent-yellow);     color: var(--dark-text); }
 .chip-ghost  { background: var(--surface-high);      color: var(--on-surface-variant); }
 .chip-primary{ background: var(--primary-container); color: var(--primary); border-color: var(--primary); }
 
@@ -325,10 +380,10 @@ body {
   position: fixed;
   bottom: 100px;
   right: 24px;
-  background: var(--ink-black);
-  color: var(--paper-white);
+  background: #1c1a27;
+  color: #ffffff;
   padding: 12px 20px;
-  border: 2px solid var(--paper-white);
+  border: 2px solid var(--primary-light);
   border-radius: 10px;
   box-shadow: var(--shadow);
   font-family: var(--font-body);
@@ -340,14 +395,15 @@ body {
 
 /* ── Overlay ────────────────────────────────────────────────── */
 .overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-  background: rgba(11, 38, 100, 0.7);
+  background: rgba(8, 7, 15, 0.85);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 150;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
 }
 
 /* ── Divider ────────────────────────────────────────────────── */
@@ -429,32 +485,34 @@ input[type="range"]::-webkit-slider-thumb:hover {
   font-weight: 800;
   flex-direction: column;
   position: relative;
-  background: var(--error-container);
+  background: #2a1b1b;
   color: var(--error);
   transition: background 0.5s;
 }
-.timer-circle.safe   { background: var(--secondary-fixed); color: var(--secondary); }
-.timer-circle.warn   { background: var(--accent-yellow); color: var(--ink-black); }
-.timer-circle.danger { background: var(--error-container); color: var(--error); }
+.timer-circle.safe   { background: #13242c; color: var(--secondary); }
+.timer-circle.warn   { background: #2b2518; color: var(--accent-yellow); }
+.timer-circle.danger { background: #2a1b1b; color: var(--error); }
 
 /* ── Chat message types ─────────────────────────────────────── */
 .chat-msg { font-size: 14px; line-height: 1.5; }
 .chat-correct {
-  background: rgba(0, 250, 154, 0.15);
-  border-left: 4px solid var(--success-mint);
-  padding: 6px 10px;
-  border-radius: 0 6px 6px 0;
-  font-weight: 700;
-  color: #007a48;
+  background: #0f2c1d !important;
+  border-left: 4px solid var(--success-mint) !important;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 800;
+  color: var(--success-mint) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 .chat-system {
-  background: var(--primary-container);
-  border-left: 4px solid var(--primary);
-  padding: 6px 10px;
-  border-radius: 0 6px 6px 0;
-  font-weight: 600;
-  color: var(--primary);
+  background: #1c1527 !important;
+  border-left: 4px solid var(--primary-light) !important;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  color: var(--primary-light) !important;
   font-size: 13px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 /* ── Player avatar circle ───────────────────────────────────── */
@@ -727,6 +785,96 @@ select:focus { box-shadow: var(--shadow-sm); }
   0%   { box-shadow: 0 0 0 0 rgba(0,0,0,0.3); }
   70%  { box-shadow: 0 0 0 5px rgba(0,0,0,0); }
   100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+}
+
+/* ── Light Mode Override ────────────────────────────────────── */
+.light-theme {
+  --ink-black: #10002b; /* Map ink-black to dark purple/black for text/borders */
+  --paper-white: #ffffff; /* Solid white card backgrounds */
+  
+  /* Surfaces */
+  --surface: rgba(0, 0, 0, 0.05);
+  --surface-low: rgba(0, 0, 0, 0.03);
+  --surface-high: rgba(0, 0, 0, 0.04);
+  --surface-highest: rgba(0, 0, 0, 0.08);
+
+  /* Text */
+  --on-surface: #10002b;
+  --on-surface-variant: rgba(16, 0, 43, 0.7);
+  --on-primary: #ffffff;
+  
+  /* Borders */
+  --border: 2px solid rgba(16, 0, 43, 0.15);
+  --border-2: 1px solid rgba(16, 0, 43, 0.1);
+
+  /* Custom Theme Backgrounds */
+  --sidebar-bg: #ffffff;
+  --chat-bg: #fafafa;
+  --header-bg: #ffffff;
+  --list-bg: #ffffff;
+
+  /* Logo Color */
+  --logo-color: var(--primary);
+
+  /* Word Blank Colors */
+  --word-blank-color: var(--primary);
+  --word-badge-color: var(--primary);
+  --word-badge-bg: rgba(157, 78, 221, 0.1);
+  --word-badge-border: 1.5px solid rgba(157, 78, 221, 0.2);
+
+  /* Timer Colors */
+  --timer-bg-safe: rgba(0, 135, 90, 0.15);
+  --timer-fg-safe: #00875a;
+  --timer-border-safe: #00875a;
+  --timer-bg-warn: rgba(180, 83, 9, 0.15);
+  --timer-fg-warn: #b45309;
+  --timer-border-warn: #b45309;
+  --timer-bg-danger: rgba(222, 53, 11, 0.2);
+  --timer-fg-danger: #de350b;
+  --timer-border-danger: #de350b;
+
+  /* Leaderboard Rank Colors */
+  --rank-1-color: #c29700;
+  --rank-2-color: #71717a;
+  --rank-3-color: #7c2d12;
+
+  /* Leaderboard Row Backgrounds */
+  --row-correct-bg: #d1fae5;
+  --row-correct-fg: #065f46;
+  --row-me-bg: #e0f2fe;
+  --row-even-bg: #f9fafb;
+  --row-odd-bg: #f3f4f6;
+
+  /* Overlay Scores */
+  --overlay-score-color: var(--primary);
+
+  /* Canvas Section & Toolbar Colors */
+  --canvas-section-bg: #fafafa;
+  --toolbar-bg: #ffffff;
+  --toolbar-border: var(--border);
+  --tool-btn-bg: rgba(16, 0, 43, 0.05);
+  --tool-btn-border: 1.5px solid rgba(16, 0, 43, 0.15);
+  --tool-btn-fg: var(--ink-black);
+  --tool-btn-label: var(--on-surface-variant);
+  --tool-btn-selected-border: 2px solid var(--ink-black);
+  --size-popup-bg: #ffffff;
+  --size-popup-border: var(--border);
+  --size-popup-shadow: var(--shadow-sm);
+}
+
+/* Light theme overrides for chat cards */
+.light-theme .chat-correct {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border-left-color: #10b981 !important;
+  text-shadow: none !important;
+}
+
+.light-theme .chat-system {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border-left-color: #a855f7 !important;
+  text-shadow: none !important;
 }
 
 

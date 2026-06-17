@@ -22,7 +22,7 @@ export default function ChatPanel({ isDrawer }) {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0,
       border: 'var(--border)', borderRadius: 10, overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
-      <div className="custom-scroll" style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', background: 'var(--paper-white)' }}>
+      <div className="custom-scroll" style={{ flex: 1, padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4, overflowY: 'auto', background: 'var(--chat-bg, #12101a)' }}>
         {chat.length === 0 && (
           <p style={{ color: 'var(--on-surface-variant)', fontSize: 12, fontStyle: 'italic', textAlign: 'center', marginTop: 12 }}>
             No guesses yet!

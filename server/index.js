@@ -85,7 +85,7 @@ io.on('connection', (socket) => {
   console.log(`[+] Socket connected: ${socket.id}`);
 
   // ── create_room ──────────────────────────────────────────
-  socket.on('create_room', ({ playerName, settings }) => {
+  socket.on('create_room', ({ playerName, avatarSeed, settings }) => {
     try {
       const roomId = createUniqueRoomCode();
       const playerId = uuidv4();
@@ -94,7 +94,7 @@ io.on('connection', (socket) => {
       room.io = io;
       rooms.set(roomId, room);
 
-      const player = new Player(playerId, playerName || 'Artist', socket.id);
+      const player = new Player(playerId, playerName || 'Artist', socket.id, avatarSeed);
       player.isHost = true;
       player.isReady = true;
       room.addPlayer(player);
@@ -116,7 +116,7 @@ io.on('connection', (socket) => {
   });
 
   // ── join_room ────────────────────────────────────────────
-  socket.on('join_room', ({ roomId, playerName }) => {
+  socket.on('join_room', ({ roomId, playerName, avatarSeed, isSpectator }) => {
     try {
       const upperCode = (roomId || '').toUpperCase().trim();
       const room = rooms.get(upperCode);
@@ -125,27 +125,52 @@ io.on('connection', (socket) => {
         socket.emit('join_error', { message: 'Room not found. Check the code!' });
         return;
       }
-      if (room.isFull()) {
-        socket.emit('join_error', { message: 'Room is full!' });
-        return;
-      }
-      if (room.game && room.game.phase !== Game.PHASE.WAITING) {
-        socket.emit('join_error', { message: 'Game already in progress!' });
+
+      const ip = socket.handshake.address;
+      if (room.isBanned(playerName, ip)) {
+        socket.emit('join_error', { message: 'You are banned from this room!' });
         return;
       }
 
+      let forceSpectator = false;
+      if (room.game && room.game.phase !== Game.PHASE.WAITING) {
+        forceSpectator = true;
+      }
+
+      if (room.isFull() && !forceSpectator && !isSpectator) {
+        socket.emit('join_error', { message: 'Room is full!' });
+        return;
+      }
+
+      const finalIsSpectator = !!(isSpectator || forceSpectator);
       const playerId = uuidv4();
-      const player = new Player(playerId, playerName || 'Artist', socket.id);
+      const player = new Player(playerId, playerName || 'Artist', socket.id, avatarSeed, finalIsSpectator);
       room.addPlayer(player);
 
       socket.join(upperCode);
       socketToPlayer.set(socket.id, { playerId, roomId: upperCode });
 
       // Tell the new player their info + full room state
+      let gameStateData = null;
+      if (room.game && room.game.phase !== Game.PHASE.WAITING) {
+        gameStateData = {
+          phase: room.game.phase,
+          currentRound: room.game.currentRound,
+          totalRounds: room.game.totalRounds,
+          currentDrawerId: room.game.currentDrawerId,
+          drawerName: room.getPlayerById(room.game.currentDrawerId)?.name || 'Artist',
+          timeLeft: room.game.timeLeft,
+          hint: room.game.getHintDisplay(),
+          blankWord: room.game._makeBlank(room.game.currentWord || ''),
+          currentWord: room.game.currentWord,
+        };
+      }
+
       socket.emit('room_joined', {
         roomId: upperCode,
         player: player.toJSON(),
         room: room.toJSON(),
+        gameState: gameStateData,
       });
 
       // Tell everyone else a player joined
@@ -154,7 +179,16 @@ io.on('connection', (socket) => {
         players: room.getPlayerList(),
       });
 
-      console.log(`[Room] ${playerName} joined ${upperCode}`);
+      if (forceSpectator) {
+        room.broadcast('chat_message', {
+          playerId: 'system',
+          playerName: 'System',
+          text: `${player.name} joined as a spectator because the game is in progress.`,
+          type: 'system'
+        });
+      }
+
+      console.log(`[Room] ${playerName} joined ${upperCode} (Spectator: ${finalIsSpectator})`);
     } catch (err) {
       console.error('[join_room error]', err);
       socket.emit('error', { message: 'Failed to join room' });
@@ -162,7 +196,7 @@ io.on('connection', (socket) => {
   });
 
   // ── join_public_room ─────────────────────────────────────
-  socket.on('join_public_room', ({ playerName }) => {
+  socket.on('join_public_room', ({ playerName, avatarSeed, isSpectator }) => {
     try {
       let room = findPublicRoom();
 
@@ -176,13 +210,14 @@ io.on('connection', (socket) => {
       }
 
       const playerId = uuidv4();
-      const player = new Player(playerId, playerName || 'Artist', socket.id);
+      const player = new Player(playerId, playerName || 'Artist', socket.id, avatarSeed, !!isSpectator);
       // First player in a brand-new room is host
       if (room.playerCount() === 0) {
         player.isHost = true;
         room.hostId = playerId;
+        player.isSpectator = false; // Host shouldn't be spectator initially
       }
-      player.isReady = true;
+      player.isReady = !player.isSpectator;
       room.addPlayer(player);
 
       socket.join(room.roomId);
@@ -199,7 +234,7 @@ io.on('connection', (socket) => {
         players: room.getPlayerList(),
       });
 
-      console.log(`[Room] ${playerName} joined public room ${room.roomId}`);
+      console.log(`[Room] ${playerName} joined public room ${room.roomId} (Spectator: ${player.isSpectator})`);
     } catch (err) {
       console.error('[join_public_room error]', err);
       socket.emit('error', { message: 'Failed to join public room' });
@@ -366,6 +401,16 @@ io.on('connection', (socket) => {
     room.broadcast('canvas_replay', { strokes: room.game.strokes });
   });
 
+  // ── request_canvas_history ────────────────────────────────
+  socket.on('request_canvas_history', () => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (room && room.game) {
+      socket.emit('canvas_replay', { strokes: room.game.strokes });
+    }
+  });
+
   // ── guess ─────────────────────────────────────────────────
   socket.on('guess', ({ text }) => {
     const meta = socketToPlayer.get(socket.id);
@@ -375,6 +420,25 @@ io.on('connection', (socket) => {
 
     const player = room.getPlayerById(meta.playerId);
     if (!player) return;
+
+    if (player.isSpectator) {
+      // Spectator typing: treat as chat but prevent spoilers
+      if (room.game.phase === Game.PHASE.DRAWING) {
+        const wordNormalized = (room.game.currentWord || '').trim().toLowerCase();
+        const textNormalized = text.trim().toLowerCase();
+        if (textNormalized.includes(wordNormalized)) {
+          socket.emit('error', { message: 'No spoilers! Spectators cannot guess the secret word in chat.' });
+          return;
+        }
+      }
+      room.broadcast('chat_message', {
+        playerId: meta.playerId,
+        playerName: `[Spec] ${player.name}`,
+        text,
+        type: 'chat',
+      });
+      return;
+    }
 
     const result = room.game.checkGuess(text, meta.playerId);
 
@@ -394,6 +458,16 @@ io.on('connection', (socket) => {
         text,
         type: 'guess',
       });
+
+      if (result && result.isClose) {
+        socket.emit('chat_message', {
+          id: Date.now() + Math.random(),
+          playerId: 'system',
+          playerName: 'System',
+          text: `⚠️ "${text}" is very close!`,
+          type: 'system',
+        });
+      }
     }
   });
 
@@ -409,9 +483,19 @@ io.on('connection', (socket) => {
     // Prevent drawer from guessing their own word via chat
     if (room.game && room.game.isDrawer(meta.playerId)) return;
 
+    // Prevent spectator spoilers
+    if (player.isSpectator && room.game && room.game.phase === Game.PHASE.DRAWING) {
+      const wordNormalized = (room.game.currentWord || '').trim().toLowerCase();
+      const textNormalized = text.trim().toLowerCase();
+      if (textNormalized.includes(wordNormalized)) {
+        socket.emit('error', { message: 'No spoilers! Spectators cannot guess the secret word in chat.' });
+        return;
+      }
+    }
+
     room.broadcast('chat_message', {
       playerId: meta.playerId,
-      playerName: player.name,
+      playerName: player.isSpectator ? `[Spec] ${player.name}` : player.name,
       text,
       type: 'chat',
     });
@@ -425,11 +509,312 @@ io.on('connection', (socket) => {
     const room = rooms.get(meta.roomId);
     if (!room) return;
 
+    const player = room.getPlayerById(meta.playerId);
+    const isSpec = player ? player.isSpectator : false;
+
     socket.emit('game_state', {
       room: room.toJSON(),
-      game: room.game ? room.game.toStateJSON() : null,
+      game: room.game ? room.game.toStateJSON(isSpec) : null,
       strokes: room.game ? room.game.strokes : [],
     });
+  });
+
+  // ── toggle_spectator ──────────────────────────────────────
+  socket.on('toggle_spectator', () => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+    const player = room.getPlayerById(meta.playerId);
+    if (!player) return;
+
+    player.isSpectator = !player.isSpectator;
+    player.isReady = false; // Reset ready status on switch
+
+    // If host toggles spectator, transfer host if there are other players
+    if (player.isSpectator && player.isHost) {
+      // Transfer host role to another non-spectator player if possible
+      const newHost = room.transferHost(player.id);
+      player.isHost = false; // Host transferred
+      if (newHost) {
+        room.broadcast('host_transferred', { newHostId: newHost.id, newHostName: newHost.name });
+      }
+    }
+
+    // Mid-game spectator toggle logic
+    if (room.game && room.game.phase !== Game.PHASE.WAITING) {
+      if (player.isSpectator) {
+        room.game.drawQueue = room.game.drawQueue.filter(id => id !== player.id);
+        room.broadcast('chat_message', {
+          playerId: 'system',
+          playerName: 'System',
+          text: `⚠️ ${player.name} has switched to spectating.`,
+          type: 'system'
+        });
+        if (room.game.currentDrawerId === player.id) {
+          room.broadcast('chat_message', {
+            playerId: 'system',
+            playerName: 'System',
+            text: `Ending round early since the drawer left the active queue.`,
+            type: 'system'
+          });
+          room.game._endRound();
+        }
+      } else {
+        if (!room.game.drawQueue.includes(player.id)) {
+          room.game.drawQueue.push(player.id);
+          room.broadcast('chat_message', {
+            playerId: 'system',
+            playerName: 'System',
+            text: `🎮 ${player.name} is now playing.`,
+            type: 'system'
+          });
+        }
+      }
+    }
+
+    room.broadcast('players_updated', { players: room.getPlayerList() });
+  });
+
+  // ── kick_player ──────────────────────────────────────────
+  socket.on('kick_player', ({ targetPlayerId }) => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+    const sender = room.getPlayerById(meta.playerId);
+    if (!sender || !sender.isHost) return;
+
+    const target = room.getPlayerById(targetPlayerId);
+    if (!target) return;
+
+    const targetSocket = io.sockets.sockets.get(target.socketId);
+    if (targetSocket) {
+      targetSocket.emit('kicked', { message: 'You have been kicked by the host.' });
+      targetSocket.leave(room.roomId);
+    }
+
+    room.removePlayer(targetPlayerId);
+    room.broadcast('player_left', {
+      playerId: targetPlayerId,
+      playerName: target.name,
+      players: room.getPlayerList()
+    });
+    room.broadcast('chat_message', {
+      playerId: 'system',
+      playerName: 'System',
+      text: `🚨 ${target.name} was kicked by the host.`,
+      type: 'system'
+    });
+  });
+
+  // ── ban_player ───────────────────────────────────────────
+  socket.on('ban_player', ({ targetPlayerId }) => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+    const sender = room.getPlayerById(meta.playerId);
+    if (!sender || !sender.isHost) return;
+
+    const target = room.getPlayerById(targetPlayerId);
+    if (!target) return;
+
+    const targetSocket = io.sockets.sockets.get(target.socketId);
+    const ip = targetSocket ? targetSocket.handshake.address : '';
+    room.ban(target.name, ip);
+
+    if (targetSocket) {
+      targetSocket.emit('banned', { message: 'You have been banned by the host.' });
+      targetSocket.leave(room.roomId);
+    }
+
+    room.removePlayer(targetPlayerId);
+    room.broadcast('player_left', {
+      playerId: targetPlayerId,
+      playerName: target.name,
+      players: room.getPlayerList()
+    });
+    room.broadcast('chat_message', {
+      playerId: 'system',
+      playerName: 'System',
+      text: `🚨 ${target.name} was banned by the host.`,
+      type: 'system'
+    });
+  });
+
+  // ── votekick_player ──────────────────────────────────────
+  socket.on('votekick_player', ({ targetPlayerId }) => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+    const initiator = room.getPlayerById(meta.playerId);
+    const target = room.getPlayerById(targetPlayerId);
+    if (!initiator || !target || initiator.isSpectator || target.id === initiator.id) return;
+
+    // Enforce minimum player requirement (at least 3 players)
+    const activePlayers = Array.from(room.players.values()).filter(p => !p.isSpectator);
+    if (activePlayers.length < 3) {
+      socket.emit('error', { message: 'Votekick requires at least 3 players in the room.' });
+      return;
+    }
+
+    const success = room.startVotekick(targetPlayerId, initiator.id);
+    if (success) {
+      room.broadcast('votekick_started', {
+        targetId: targetPlayerId,
+        targetName: target.name,
+        initiatorName: initiator.name,
+        votesCount: 1,
+        requiredVotes: room.votekick.requiredVotes,
+        expiresAt: room.votekick.expiresAt
+      });
+      room.broadcast('chat_message', {
+        playerId: 'system',
+        playerName: 'System',
+        text: `🗳️ Votekick started against ${target.name} by ${initiator.name} (1/${room.votekick.requiredVotes} votes).`,
+        type: 'system'
+      });
+
+      // Clear existing timer if any
+      if (room.votekickTimer) clearTimeout(room.votekickTimer);
+
+      // Set a timer to clear the vote after 30s
+      room.votekickTimer = setTimeout(() => {
+        if (room.votekick && room.votekick.targetId === targetPlayerId) {
+          room.clearVotekick();
+          room.broadcast('votekick_cleared');
+          room.broadcast('chat_message', {
+            playerId: 'system',
+            playerName: 'System',
+            text: `🗳️ Votekick against ${target.name} has expired.`,
+            type: 'system'
+          });
+        }
+      }, 30000);
+    }
+  });
+
+  // ── vote_kick ────────────────────────────────────────────
+  socket.on('vote_kick', ({ vote }) => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room || !room.votekick) return;
+    const voter = room.getPlayerById(meta.playerId);
+    if (!voter || voter.isSpectator || voter.id === room.votekick.targetId) return;
+
+    const result = room.castVotekick(voter.id, vote);
+    if (result) {
+      if (result.kicked) {
+        // Clear the timer
+        if (room.votekickTimer) clearTimeout(room.votekickTimer);
+
+        const target = room.getPlayerById(result.targetId);
+        if (target) {
+          const targetSocket = io.sockets.sockets.get(target.socketId);
+          if (targetSocket) {
+            targetSocket.emit('kicked', { message: 'You have been kicked via community vote.' });
+            targetSocket.leave(room.roomId);
+          }
+          room.removePlayer(result.targetId);
+          room.broadcast('votekick_cleared');
+          room.broadcast('player_left', {
+            playerId: result.targetId,
+            playerName: target.name,
+            players: room.getPlayerList()
+          });
+          room.broadcast('chat_message', {
+            playerId: 'system',
+            playerName: 'System',
+            text: `🚨 ${target.name} was kicked via vote.`,
+            type: 'system'
+          });
+        }
+      } else if (result.failed) {
+        // Clear the timer
+        if (room.votekickTimer) clearTimeout(room.votekickTimer);
+
+        const target = room.getPlayerById(result.targetId);
+        room.broadcast('votekick_cleared');
+        room.broadcast('chat_message', {
+          playerId: 'system',
+          playerName: 'System',
+          text: `🗳️ Votekick against ${target ? target.name : 'player'} failed due to insufficient support.`,
+          type: 'system'
+        });
+      } else {
+        const target = room.getPlayerById(room.votekick?.targetId);
+        room.broadcast('votekick_updated', {
+          targetId: room.votekick?.targetId,
+          targetName: target?.name,
+          votesCount: result.currentVotes,
+          requiredVotes: result.requiredVotes
+        });
+      }
+    }
+  });
+
+  // ── report_player ────────────────────────────────────────
+  socket.on('report_player', ({ targetPlayerId, reason }) => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+    const reporter = room.getPlayerById(meta.playerId);
+    const target = room.getPlayerById(targetPlayerId);
+    if (!reporter || !target) return;
+
+    target.reporters = target.reporters || new Set();
+    if (target.reporters.has(reporter.id)) {
+      socket.emit('error', { message: 'You have already reported this player.' });
+      return;
+    }
+    target.reporters.add(reporter.id);
+    target.reportCount = (target.reportCount || 0) + 1;
+
+    room.broadcast('chat_message', {
+      playerId: 'system',
+      playerName: 'System',
+      text: `⚠️ ${reporter.name} reported ${target.name} for: "${reason || 'unspecified behavior'}"`,
+      type: 'system'
+    });
+
+    // Auto-kick if reports count >= 3
+    if (target.reportCount >= 3) {
+      const targetSocket = io.sockets.sockets.get(target.socketId);
+      if (targetSocket) {
+        targetSocket.emit('kicked', { message: 'You have been auto-kicked due to receiving multiple reports.' });
+        targetSocket.leave(room.roomId);
+      }
+      room.removePlayer(targetPlayerId);
+      room.broadcast('player_left', {
+        playerId: targetPlayerId,
+        playerName: target.name,
+        players: room.getPlayerList()
+      });
+      room.broadcast('chat_message', {
+        playerId: 'system',
+        playerName: 'System',
+        text: `🚨 ${target.name} was auto-kicked after receiving 3 community reports.`,
+        type: 'system'
+      });
+    }
+  });
+
+  // ── request_last_round_replay ────────────────────────────
+  socket.on('request_last_round_replay', () => {
+    const meta = socketToPlayer.get(socket.id);
+    if (!meta) return;
+    const room = rooms.get(meta.roomId);
+    if (!room) return;
+
+    if (room.lastRoundStrokes) {
+      socket.emit('last_round_replay', room.lastRoundStrokes);
+    } else {
+      socket.emit('error', { message: 'No replay available yet. Finish a round first!' });
+    }
   });
 
   // ── disconnect ────────────────────────────────────────────

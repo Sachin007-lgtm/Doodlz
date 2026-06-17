@@ -48,8 +48,10 @@ class Game {
   // ── Game lifecycle ─────────────────────────────────────────
 
   start() {
-    // Build draw queue from current players
-    this.drawQueue = Array.from(this.room.players.keys());
+    // Build draw queue from current players (excluding spectators)
+    this.drawQueue = Array.from(this.room.players.values())
+      .filter(p => !p.isSpectator)
+      .map(p => p.id);
     this.currentRound = 1;
     this.currentDrawerIndex = 0;
     this._startTurn();
@@ -151,20 +153,26 @@ class Game {
 
     const blankWord = this._makeBlank(word);
 
-    // Tell everyone the word length (blanks), tell drawer the actual word
-    const drawer = this.room.getPlayerById(this.currentDrawerId);
-    if (drawer && this.room.io) {
-      this.room.io.to(drawer.socketId).emit('word_chosen', {
-        word: this.currentWord,
-        blank: blankWord,
-        drawTime: this.drawTime,
-      });
+    // Tell everyone the word length (blanks) or actual word (if spectator/drawer)
+    if (this.room.io) {
+      for (const p of this.room.players.values()) {
+        const isDrawer = (p.id === this.currentDrawerId);
+        const isSpectator = p.isSpectator;
+        if (isDrawer || isSpectator) {
+          this.room.io.to(p.socketId).emit('word_chosen', {
+            word: this.currentWord,
+            blank: blankWord,
+            drawTime: this.drawTime,
+          });
+        } else {
+          this.room.io.to(p.socketId).emit('word_chosen', {
+            word: null,
+            blank: blankWord,
+            drawTime: this.drawTime,
+          });
+        }
+      }
     }
-    this.room.broadcastToOthers(
-      drawer ? drawer.socketId : '',
-      'word_chosen',
-      { word: null, blank: blankWord, drawTime: this.drawTime }
-    );
 
     // Start countdown timer
     this._startTimer();
@@ -213,6 +221,14 @@ class Game {
   _endRound() {
     this._clearTimers();
     this.phase = PHASE.ROUND_END;
+
+    // Save stroke data for replay
+    this.room.lastRoundStrokes = {
+      word: this.currentWord,
+      drawerId: this.currentDrawerId,
+      drawerName: this.room.getPlayerById(this.currentDrawerId)?.name || 'Artist',
+      strokes: [...this.strokes]
+    };
 
     // Drawer gets points for each correct guesser
     const drawerBonus = this.correctGuessCount * 50;
@@ -276,7 +292,7 @@ class Game {
     if (playerId === this.currentDrawerId) return false;
 
     const player = this.room.getPlayerById(playerId);
-    if (!player || player.hasGuessedCorrectly) return false;
+    if (!player || player.hasGuessedCorrectly || player.isSpectator) return false;
 
     const normalized = text.trim().toLowerCase();
     const wordNormalized = (this.currentWord || '').trim().toLowerCase();
@@ -295,7 +311,7 @@ class Game {
 
       // If all non-drawers guessed, end round early
       const nonDrawers = Array.from(this.room.players.values()).filter(
-        p => p.id !== this.currentDrawerId
+        p => p.id !== this.currentDrawerId && !p.isSpectator
       );
       const allGuessed = nonDrawers.every(p => p.hasGuessedCorrectly);
       if (allGuessed) {
@@ -305,7 +321,38 @@ class Game {
       return { correct: true, points: pts };
     }
 
-    return { correct: false };
+    // Levenshtein distance helper
+    const getLevenshteinDistance = (a, b) => {
+      const tmp = [];
+      let i, j;
+      for (i = 0; i <= a.length; i++) tmp[i] = [i];
+      for (j = 0; j <= b.length; j++) tmp[0][j] = j;
+      for (i = 1; i <= a.length; i++) {
+        for (j = 1; j <= b.length; j++) {
+          tmp[i][j] = Math.min(
+            tmp[i - 1][j] + 1,
+            tmp[i][j - 1] + 1,
+            tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+          );
+        }
+      }
+      return tmp[a.length][b.length];
+    };
+
+    const dist = getLevenshteinDistance(normalized, wordNormalized);
+    const wordLen = wordNormalized.length;
+    const guessLen = normalized.length;
+
+    // Check distance-based closeness
+    const isCloseDist = (dist === 1 && wordLen >= 3) || (dist === 2 && wordLen >= 6);
+
+    // Check substring-based closeness (e.g. "rain" for "rainbow" or "brush" for "toothbrush")
+    const isSubstring = (guessLen >= 3 && wordLen >= 3) && 
+      (wordNormalized.includes(normalized) || normalized.includes(wordNormalized));
+
+    const isClose = isCloseDist || isSubstring;
+
+    return { correct: false, isClose };
   }
 
   // ── Drawing ────────────────────────────────────────────────
@@ -367,7 +414,7 @@ class Game {
     return playerId === this.currentDrawerId;
   }
 
-  toStateJSON() {
+  toStateJSON(isSpectator = false) {
     return {
       phase: this.phase,
       currentRound: this.currentRound,
@@ -378,6 +425,7 @@ class Game {
       wordLength: this.currentWord ? this.currentWord.length : 0,
       blankWord: this.currentWord ? this._makeBlank(this.currentWord) : '',
       correctGuessCount: this.correctGuessCount,
+      currentWord: (isSpectator && this.currentWord) ? this.currentWord : null,
     };
   }
 }

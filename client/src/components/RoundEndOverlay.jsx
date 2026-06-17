@@ -2,9 +2,9 @@ export default function RoundEndOverlay({ word, scores }) {
   const sorted = [...(scores || [])].sort((a, b) => b.score - a.score)
 
   return (
-    <div className="overlay">
+    <div className="overlay" style={{ zIndex: 200 }}>
       <div className="neo-card animate-pop-in"
-        style={{ padding: '28px 32px', maxWidth: 440, width: '90%', textAlign: 'center' }}>
+        style={{ padding: '28px 32px', maxWidth: 440, width: '90%', textAlign: 'center', background: 'var(--paper-white)', border: 'var(--border)', boxShadow: 'var(--shadow)' }}>
         <div style={{ fontSize: 36, marginBottom: 6 }}>🔔</div>
         <h2 className="text-headline" style={{ color: 'var(--ink-black)', marginBottom: 4 }}>Round Over!</h2>
         <p style={{ fontSize: 14, color: 'var(--on-surface-variant)', marginBottom: 14 }}>The word was:</p>
@@ -26,17 +26,17 @@ export default function RoundEndOverlay({ word, scores }) {
               padding: '8px 12px', background: i === 0 ? 'var(--primary-container)' : 'var(--surface-low)',
               borderRadius: 8, border: 'var(--border-2)',
             }}>
-              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14 }}>
+              <span style={{ fontFamily: 'var(--font-body)', fontWeight: 700, fontSize: 14, color: 'var(--ink-black)' }}>
                 {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`} {s.name}
               </span>
               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                 {(s.roundScore || 0) > 0 && (
                   <span style={{
-                    fontFamily: 'var(--font-mono)', fontSize: 12, color: '#007a48',
-                    background: 'rgba(0,250,154,0.15)', padding: '2px 8px', borderRadius: 6, fontWeight: 700,
+                    fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--dark-text)',
+                    background: 'var(--success-mint)', padding: '2px 8px', borderRadius: 6, fontWeight: 800,
                   }}>+{s.roundScore}</span>
                 )}
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, color: 'var(--primary)' }}>
+                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, color: 'var(--overlay-score-color)' }}>
                   {s.score?.toLocaleString()}
                 </span>
               </div>

@@ -12,6 +12,8 @@ export function GameProvider({ children }) {
   const [chat, setChat]         = useState([])
   const [roundEndData, setRoundEndData]   = useState(null)
   const [gameOverData, setGameOverData]   = useState(null)
+  const [votekick, setVotekick] = useState(null)
+  const [lastRoundReplay, setLastRoundReplay] = useState(null)
   const [gameState, setGameState] = useState({
     phase: 'waiting',
     currentRound: 0,
@@ -41,12 +43,27 @@ export function GameProvider({ children }) {
         setPlayers(room.players)
         setChat([])
       },
-      room_joined: ({ player, room }) => {
+      room_joined: ({ player, room, gameState }) => {
         setMyPlayer(player)
         setRoom(room)
         setPlayers(room.players)
         setChat([])
-        setGameState(s => ({ ...s, phase: 'waiting' }))
+        if (gameState) {
+          setGameState(prev => ({
+            ...prev,
+            phase: gameState.phase,
+            currentRound: gameState.currentRound,
+            totalRounds: gameState.totalRounds,
+            currentDrawerId: gameState.currentDrawerId,
+            drawerName: gameState.drawerName,
+            timeLeft: gameState.timeLeft,
+            hint: gameState.hint,
+            blankWord: gameState.blankWord,
+            currentWord: gameState.currentWord,
+          }))
+        } else {
+          setGameState(s => ({ ...s, phase: 'waiting' }))
+        }
         setRoundEndData(null)
         setGameOverData(null)
       },
@@ -121,6 +138,7 @@ export function GameProvider({ children }) {
           return s ? { ...p, score: s.score } : p
         }))
         setGameState(s => ({ ...s, phase: 'round_end' }))
+        setRoom(prev => prev ? { ...prev, hasReplay: true } : prev)
         addChat({ type: 'system', text: `🔔 Round over! Word was "${data.word}"` })
       },
       game_over: (data) => {
@@ -129,6 +147,26 @@ export function GameProvider({ children }) {
       },
       join_error: ({ message }) => alert(message),
       error: ({ message }) => console.error('[Server]', message),
+      kicked: ({ message }) => {
+        alert(message || 'You have been kicked from the room.');
+        window.location.replace('/');
+      },
+      banned: ({ message }) => {
+        alert(message || 'You have been banned from the room.');
+        window.location.replace('/');
+      },
+      votekick_started: (data) => {
+        setVotekick(data);
+      },
+      votekick_updated: (data) => {
+        setVotekick(prev => prev ? { ...prev, ...data } : data);
+      },
+      votekick_cleared: () => {
+        setVotekick(null);
+      },
+      last_round_replay: (data) => {
+        setLastRoundReplay(data);
+      },
     }
 
     Object.entries(handlers).forEach(([ev, fn]) => socket.on(ev, fn))
@@ -144,10 +182,14 @@ export function GameProvider({ children }) {
       chat, addChat,
       roundEndData,
       gameOverData,
+      votekick, setVotekick,
+      lastRoundReplay, setLastRoundReplay,
       resetGame: () => {
         setRoom(null)
         setMyPlayer(null)
         setPlayers([])
+        setVotekick(null)
+        setLastRoundReplay(null)
         setGameState({
           phase: 'waiting',
           currentRound: 0,

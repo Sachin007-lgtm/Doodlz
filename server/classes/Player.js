@@ -3,7 +3,7 @@
 // ============================================================
 
 class Player {
-  constructor(id, name, socketId) {
+  constructor(id, name, socketId, avatarSeed = null, isSpectator = false) {
     this.id = id;               // stable uuid
     this.name = name;           // display name
     this.socketId = socketId;   // current socket connection
@@ -13,9 +13,10 @@ class Player {
     this.isHost = false;
     this.hasGuessedCorrectly = false;
     this.guessedAt = null;      // timestamp for scoring
-    // DiceBear seed — random noun for unique avatar
-    this.avatarSeed = name + Math.floor(Math.random() * 9999);
+    // DiceBear seed — use selected seed or generate a random one
+    this.avatarSeed = avatarSeed || (name + Math.floor(Math.random() * 9999));
     this.color = Player.COLORS[Math.floor(Math.random() * Player.COLORS.length)];
+    this.isSpectator = isSpectator;
   }
 
   addPoints(pts) {
@@ -48,6 +49,7 @@ class Player {
       hasGuessedCorrectly: this.hasGuessedCorrectly,
       avatarSeed: this.avatarSeed,
       color: this.color,
+      isSpectator: this.isSpectator,
     };
   }
 }

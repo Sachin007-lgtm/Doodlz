@@ -22,6 +22,82 @@ class Room {
     this.game = null;           // set by Game class
     this.createdAt = Date.now();
     this.io = null;             // injected by server
+    this.bannedPlayers = new Set(); // store { name, ip }
+    this.votekick = null; // { targetId, votes: Set, requiredVotes, expiresAt }
+    this.lastRoundStrokes = null; // store last round strokes for replay
+  }
+
+  // ── Moderation & Bans ──────────────────────────────────────
+  isBanned(name, ip) {
+    const normName = (name || '').trim().toLowerCase();
+    for (const b of this.bannedPlayers) {
+      if (b.name === normName || b.ip === ip) return true;
+    }
+    return false;
+  }
+
+  ban(name, ip) {
+    this.bannedPlayers.add({ name: (name || '').trim().toLowerCase(), ip });
+  }
+
+  // ── Votekick ───────────────────────────────────────────────
+  startVotekick(targetId, initiatorId) {
+    // Check if there is an active valid votekick
+    if (this.votekick && this.votekick.expiresAt > Date.now()) {
+      return false;
+    }
+
+    const nonTargetPlayers = Array.from(this.players.values()).filter(p => p.id !== targetId && !p.isSpectator);
+    // Required votes: majority of non-target active players
+    const requiredVotes = Math.max(1, Math.floor(nonTargetPlayers.length / 2) + 1);
+
+    this.votekick = {
+      targetId,
+      yesVotes: new Set([initiatorId]),
+      noVotes: new Set(),
+      requiredVotes,
+      expiresAt: Date.now() + 30000, // 30 seconds
+    };
+    return true;
+  }
+
+  castVotekick(voterId, vote) {
+    if (!this.votekick || this.votekick.expiresAt < Date.now()) {
+      this.votekick = null;
+      return null;
+    }
+
+    const targetId = this.votekick.targetId;
+
+    if (vote === 'yes') {
+      this.votekick.yesVotes.add(voterId);
+      this.votekick.noVotes.delete(voterId);
+    } else if (vote === 'no') {
+      this.votekick.noVotes.add(voterId);
+      this.votekick.yesVotes.delete(voterId);
+    }
+
+    // Recalculate required votes in case players left
+    const nonTargetPlayers = Array.from(this.players.values()).filter(p => p.id !== targetId && !p.isSpectator);
+    this.votekick.requiredVotes = Math.max(1, Math.floor(nonTargetPlayers.length / 2) + 1);
+
+    if (this.votekick.yesVotes.size >= this.votekick.requiredVotes) {
+      this.votekick = null;
+      return { kicked: true, targetId };
+    }
+
+    // If yes votes cannot possibly reach required due to no votes, end early
+    const maxPossibleYes = nonTargetPlayers.length - this.votekick.noVotes.size;
+    if (maxPossibleYes < this.votekick.requiredVotes) {
+      this.votekick = null;
+      return { kicked: false, failed: true, targetId };
+    }
+
+    return { kicked: false, failed: false, currentVotes: this.votekick.yesVotes.size, requiredVotes: this.votekick.requiredVotes };
+  }
+
+  clearVotekick() {
+    this.votekick = null;
   }
 
   // ── Player management ──────────────────────────────────────
@@ -100,6 +176,7 @@ class Room {
       settings: this.settings,
       players: this.getPlayerList(),
       playerCount: this.players.size,
+      hasReplay: !!this.lastRoundStrokes,
     };
   }
 }

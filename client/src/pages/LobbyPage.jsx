@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useSocket } from '../context/SocketContext'
 import { useGame } from '../context/GameContext'
+import doodlzLogoImg from '../assets/image-removebg-preview.png'
 
 const avatar = seed =>
   `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc`
@@ -47,7 +48,7 @@ export default function LobbyPage() {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'transparent' }}>
       <header className="app-header">
-        <span className="logo">Doodlz</span>
+        <img src={doodlzLogoImg} alt="Doodlz" style={{ height: 80, objectFit: 'contain', display: 'block', margin: '0 auto', transform: 'translateY(8px)' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--secondary-container)', padding: '5px 14px', border: 'var(--border-2)', borderRadius: 20 }}>
           <span className="material-symbols-outlined" style={{ fontSize: 16, color: 'var(--secondary)' }}>meeting_room</span>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, color: 'var(--secondary)' }}>LOBBY #{roomId}</span>

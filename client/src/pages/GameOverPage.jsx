@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useGame } from '../context/GameContext'
 import { useSocket } from '../context/SocketContext'
+import doodlzLogoImg from '../assets/image-removebg-preview.png'
 
 const avatar = seed =>
   `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc`
@@ -63,7 +64,7 @@ export default function GameOverPage() {
         
         {/* Top Logo */}
         <div style={{ textAlign: 'center', marginBottom: 30, position: 'relative', width: '100%' }}>
-          <span className="logo" style={{ fontSize: 'clamp(40px, 6vw, 60px)', textShadow: '0 8px 16px rgba(0,0,0,0.6)' }}>Doodlz</span>
+          <img src={doodlzLogoImg} alt="Doodlz" style={{ height: 110, objectFit: 'contain', display: 'inline', margin: '-4px auto', transform: 'translateY(8px)' }} />
           
           <div style={{ position: 'absolute', top: 10, right: 0, display: 'flex', gap: 8 }}>
             <button className="btn btn-ghost btn-icon" onClick={handlePlayAgain} title="Play Again">
@@ -82,7 +83,7 @@ export default function GameOverPage() {
             fontSize: 'clamp(36px,7vw,64px)', color: 'var(--primary)',
             textShadow: '4px 4px 0 var(--ink-black)', marginBottom: 6,
           }}>GAME OVER</h1>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'var(--on-surface-variant)' }}>
+          <p style={{ fontFamily: 'var(--font-body)', fontSize: 16, color: 'rgba(255,255,255,0.7)' }}>
             Congratulations to the master artists! 🎨
           </p>
         </div>

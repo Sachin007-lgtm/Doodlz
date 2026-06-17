@@ -1,9 +1,9 @@
 export default function Timer({ timeLeft, drawTime }) {
   const pct  = drawTime > 0 ? timeLeft / drawTime : 1
   const tier = pct > 0.5 ? 'safe' : pct > 0.25 ? 'warn' : 'danger'
-  const borderCol = { safe: '#00FA9A', warn: '#ffe16d', danger: '#ff4d4d' }[tier]
-  const bg = { safe: 'rgba(0, 250, 154, 0.1)', warn: 'rgba(255, 225, 109, 0.1)', danger: 'rgba(255, 77, 77, 0.15)' }[tier]
-  const fg = { safe: '#00FA9A', warn: '#ffe16d', danger: '#ff4d4d' }[tier]
+  const borderCol = `var(--timer-border-${tier})`
+  const bg = `var(--timer-bg-${tier})`
+  const fg = `var(--timer-fg-${tier})`
 
   return (
     <div style={{
