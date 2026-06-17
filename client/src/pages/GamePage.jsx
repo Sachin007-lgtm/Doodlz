@@ -604,7 +604,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
 
           {/* Empty slot hints */}
           {Array.from({ length: Math.max(0, Math.min(3, 8 - players.length)) }).map((_, i) => (
-            <div key={i} onClick={copyCode}
+            <div key={i} onClick={copyInviteLink}
               style={{
                 border: '2.5px dashed #9d4edd', borderRadius: 16, padding: 12,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
