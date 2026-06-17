@@ -2,7 +2,7 @@
 
 A full-stack real-time multiplayer drawing and guessing game (skribbl.io clone) built with React + Vite + Node.js + Socket.IO.
 
-**Live URL:** `https://your-doodlz-server.onrender.com` ← update after deployment
+**Live URL:** [https://doodlz.vercel.app/](https://doodlz.vercel.app/)
 
 ---
 
@@ -10,12 +10,12 @@ A full-stack real-time multiplayer drawing and guessing game (skribbl.io clone) 
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite + React Router v6 |
+| Frontend | React 19 + Vite + React Router v7 (Deployed on Vercel) |
 | Canvas | HTML5 Canvas API (custom drawing hook) |
-| Backend | Node.js + Express |
+| Backend | Node.js + Express (Deployed on Render) |
 | Real-time | Socket.IO 4 |
 | Avatars | DiceBear API (adventurer style) |
-| Deployment | Render / Railway |
+| Deployment | Vercel (Frontend) / Render (Backend) |
 
 ---
 
@@ -115,9 +115,9 @@ Doodlz/
 
 ---
 
-## Deployment (Render)
+## Deployment
 
-### Backend (Web Service)
+### Backend (Render Web Service)
 1. Create a new **Web Service** on [render.com](https://render.com)
 2. Connect your GitHub repo
 3. Set:
@@ -127,17 +127,14 @@ Doodlz/
 4. Add environment variable: `PORT=3001` (Render sets this automatically)
 5. Enable **WebSocket** support (auto on Render)
 
-### Frontend (Static Site)
-1. Create a new **Static Site** on Render
-2. Set:
+### Frontend (Vercel Static Site)
+1. Import your repository into [Vercel](https://vercel.com)
+2. Configure the project settings:
+   - **Framework Preset:** Vite
    - **Root directory:** `client`
-   - **Build command:** `npm install && npm run build`
-   - **Publish directory:** `dist`
-3. Add environment variable: `VITE_SERVER_URL=https://your-server.onrender.com`
-
-### Alternative: Railway
-- Create a project, add two services (server + client)
-- Same env vars as above
+   - **Build command:** `npm run build`
+   - **Output directory:** `dist`
+3. Add environment variable: `VITE_SERVER_URL=https://your-server-url.onrender.com` (pointing to your Render backend URL)
 
 ---
 
