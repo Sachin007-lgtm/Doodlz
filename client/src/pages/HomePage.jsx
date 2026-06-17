@@ -46,6 +46,76 @@ export default function HomePage() {
   const { socket, connected } = useSocket()
   const { room, myPlayer } = useGame()
 
+  const [splashLoading, setSplashLoading] = useState(true)
+  const [fadeOut, setFadeOut] = useState(false)
+  const [videoLoaded, setVideoLoaded] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [loadingText, setLoadingText] = useState('Sharpening pencils...')
+  const [startTime] = useState(() => Date.now())
+
+  // Rotate loading text hints
+  useEffect(() => {
+    if (!splashLoading) return
+    const hints = [
+      'Sharpening pencils...',
+      'Mixing color palettes...',
+      'Doodling something weird...',
+      'Picasso is warming up...',
+      'Preparing canvas...'
+    ]
+    let hintIndex = 0
+    const textInterval = setInterval(() => {
+      hintIndex = (hintIndex + 1) % hints.length
+      setLoadingText(hints[hintIndex])
+    }, 450)
+    return () => clearInterval(textInterval)
+  }, [splashLoading])
+
+  // Simulate progress bar up to 100%
+  useEffect(() => {
+    const progressInterval = setInterval(() => {
+      setLoadProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(progressInterval)
+          return 100
+        }
+        const diff = Math.random() * 5 + 2
+        return Math.min(100, prev + diff)
+      })
+    }, 120)
+    return () => clearInterval(progressInterval)
+  }, [])
+
+  // Check if both progress is 100% and video is loaded (or max timeout is reached)
+  useEffect(() => {
+    const elapsedTime = Date.now() - startTime
+    const remainingTime = Math.max(0, 2000 - elapsedTime)
+
+    let fadeTimer
+    let loadTimer
+
+    const startFadeOut = () => {
+      setFadeOut(true)
+      loadTimer = setTimeout(() => setSplashLoading(false), 500)
+    }
+
+    // Fallback if not loaded, fallback to start fadeout at 5000ms total
+    const fallbackTimeout = setTimeout(() => {
+      startFadeOut()
+    }, Math.max(0, 3000 - elapsedTime))
+
+    if (loadProgress === 100 && (videoLoaded || window.videoLoadedCached)) {
+      clearTimeout(fallbackTimeout)
+      fadeTimer = setTimeout(startFadeOut, remainingTime)
+    }
+
+    return () => {
+      clearTimeout(fallbackTimeout)
+      clearTimeout(fadeTimer)
+      clearTimeout(loadTimer)
+    }
+  }, [loadProgress, videoLoaded, startTime])
+
   const [activeTab, setActiveTab] = useState('anonymous')
   const [playerName, setPlayerName] = useState('')
   const [joinCode, setJoinCode] = useState('')
@@ -123,6 +193,105 @@ export default function HomePage() {
   return (
     <div className="page-wrapper" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
+      {/* Splash Screen */}
+      {splashLoading && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: '#1c1a27',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: fadeOut ? 0 : 1,
+          transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          pointerEvents: fadeOut ? 'none' : 'auto'
+        }}>
+          {/* Splash Card */}
+          <div style={{
+            background: '#fdfcf4',
+            border: '4px solid #000000',
+            borderRadius: 16,
+            boxShadow: 'inset 0 0 0 3px #ffffff, 8px 8px 0px #000000',
+            padding: '40px 50px',
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 24,
+            maxWidth: 380,
+            width: '90%',
+            animation: 'pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+          }}>
+            {/* Bouncing Brush emblem */}
+            <div className="animate-bounce-gentle" style={{
+              width: 80,
+              height: 80,
+              borderRadius: '50%',
+              background: '#ffe16d',
+              border: '3px solid #000000',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '4px 4px 0px #000000'
+            }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 42, color: '#000000', fontWeight: 'bold' }}>brush</span>
+            </div>
+
+            {/* Title */}
+            <div>
+              <h1 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 36,
+                fontWeight: 900,
+                color: '#5c86f0',
+                textShadow: '2px 2px 0px #000000',
+                letterSpacing: '0.05em',
+                margin: 0
+              }}>
+                DOODLZ
+              </h1>
+              <p style={{
+                fontFamily: 'var(--font-mono)',
+                fontSize: 10,
+                color: '#888888',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                marginTop: 4
+              }}>
+                Draw. Guess. Win.
+              </p>
+            </div>
+
+            {/* Progress indicator */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{
+                width: '100%',
+                height: 16,
+                border: '3px solid #000000',
+                borderRadius: 999,
+                background: '#ffffff',
+                overflow: 'hidden',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+              }}>
+                <div style={{
+                  width: `${loadProgress}%`,
+                  height: '100%',
+                  background: '#00FA9A',
+                  borderRight: loadProgress > 0 ? '3px solid #000000' : 'none',
+                  transition: 'width 0.1s ease-out'
+                }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: '#000000', padding: '0 4px' }}>
+                <span style={{ textTransform: 'uppercase' }}>{loadingText}</span>
+                <span>{Math.round(loadProgress)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Area */}
       <div style={{ textAlign: 'left', padding: '0 20px 0', position: 'relative', width: '100%', flexShrink: 0 }}>
         {/* Connection Status (Top Right) */}
@@ -138,6 +307,7 @@ export default function HomePage() {
 
           <video
             src={headerVideo}
+            onLoadedData={() => { setVideoLoaded(true); window.videoLoadedCached = true; }}
             autoPlay
             loop
             muted
