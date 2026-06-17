@@ -484,14 +484,21 @@ const avatar = seed =>
   `https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(seed)}&backgroundColor=b6e3f4,c0aede,d1d4f9`
 
 function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, resetGame }) {
-  const [copied, setCopied] = useState(false)
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [copiedCode, setCopiedCode] = useState(false)
   const isHost = myPlayer?.isHost
 
   const copyInviteLink = () => {
     const inviteUrl = `${window.location.origin}/game/${roomId}`
     navigator.clipboard.writeText(inviteUrl).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2000)
+  }
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(roomId).catch(() => {})
+    setCopiedCode(true)
+    setTimeout(() => setCopiedCode(false), 2000)
   }
 
   const handleLeave = () => {
@@ -525,7 +532,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 12px rgba(0,0,0,0.2)', transition: 'transform 0.15s'
             }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#333' }}>{copied ? 'check' : 'share'}</span>
+              <span className="material-symbols-outlined" style={{ fontSize: 18, color: '#333' }}>{copiedLink ? 'check' : 'share'}</span>
             </button>
             <button onClick={handleLeave} title="Leave room" style={{
               width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(255,100,100,0.6)',
@@ -539,27 +546,46 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
         </div>
 
         {/* Room Code Card */}
-        <div style={{ ...glassCard, padding: '14px 28px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 56 }}>
+        <div style={{ ...glassCard, padding: '14px 28px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 40 }}>
           <div>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9d4edd', marginBottom: 2 }}>Invite Friends</p>
-            <h1 onClick={copyInviteLink} style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px, 3.5vw, 36px)', fontWeight: 900, color: '#000000', letterSpacing: '0.12em', cursor: 'pointer', margin: 0 }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9d4edd', marginBottom: 2 }}>Room Code</p>
+            <h1
+              onClick={copyCode}
+              title="Click to copy room code"
+              style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px, 3.5vw, 36px)', fontWeight: 900, color: '#000000', letterSpacing: '0.12em', cursor: 'pointer', margin: 0, transition: 'color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#9d4edd'}
+              onMouseLeave={e => e.currentTarget.style.color = '#000000'}
+            >
               #{roomId}
             </h1>
           </div>
-          <div style={{ width: 1, height: 48, background: 'rgba(0,0,0,0.12)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ width: 1, height: 56, background: 'rgba(0,0,0,0.12)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <p style={{ fontSize: 12, color: '#555', margin: 0, fontFamily: 'var(--font-body)', fontWeight: 600 }}>
               {players.length} player{players.length !== 1 ? 's' : ''} in lobby
             </p>
-            <button onClick={copyInviteLink} style={{
-              display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-              background: copied ? '#00b4d8' : '#9d4edd', color: '#fff', border: 'none',
-              borderRadius: 20, cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700,
-              fontSize: 12, letterSpacing: '0.03em', transition: 'background 0.2s',
-            }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{copied ? 'check' : 'content_copy'}</span>
-              {copied ? 'Copied!' : 'Copy Invite Link'}
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* Copy Code */}
+              <button onClick={copyCode} style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
+                background: copiedCode ? '#00b894' : '#1c1a27', color: '#fff', border: 'none',
+                borderRadius: 20, cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: 11, letterSpacing: '0.03em', transition: 'background 0.2s',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{copiedCode ? 'check' : 'tag'}</span>
+                {copiedCode ? 'Copied!' : 'Copy Code'}
+              </button>
+              {/* Copy Link */}
+              <button onClick={copyInviteLink} style={{
+                display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px',
+                background: copiedLink ? '#00b4d8' : '#9d4edd', color: '#fff', border: 'none',
+                borderRadius: 20, cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700,
+                fontSize: 11, letterSpacing: '0.03em', transition: 'background 0.2s',
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 13 }}>{copiedLink ? 'check' : 'link'}</span>
+                {copiedLink ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
           </div>
         </div>
 
