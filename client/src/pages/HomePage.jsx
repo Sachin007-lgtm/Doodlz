@@ -160,7 +160,7 @@ export default function HomePage() {
         flex: 1,
         padding: '0 20px 20px',
         maxWidth: 900,
-        margin: activeTab === 'anonymous' ? '-15px auto 0' : '-95px auto 0',
+        margin: activeTab === 'anonymous' ? '-15px auto 0' : '-115px auto 0',
         width: '100%',
         gap: '20px',
         position: 'relative',
@@ -172,7 +172,7 @@ export default function HomePage() {
         <div style={{
           position: 'relative',
           width: '100%',
-          height: activeTab === 'anonymous' ? 310 : 390,
+          height: activeTab === 'anonymous' ? 310 : 430,
           transition: 'height 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
         }}>
 
@@ -181,9 +181,9 @@ export default function HomePage() {
             position: 'absolute',
             top: 0,
             left: 0,
-            width: 'calc(50% - 20px)',
+            width: 'calc(50% - 30px)',
             height: '100%',
-            transform: activeTab === 'anonymous' ? 'translateX(0)' : 'translateX(calc(100% + 40px))',
+            transform: activeTab === 'anonymous' ? 'translateX(0)' : 'translateX(calc(100% + 60px))',
             transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             zIndex: activeTab === 'anonymous' ? 2 : 1
           }}>
@@ -287,7 +287,7 @@ export default function HomePage() {
                   </div>
                 ) : (
                   /* Create Room Tab Content */
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '2px 0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', padding: '6px 0', flex: 1 }}>
                     {/* Avatar & Nickname Selection */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                       {/* Avatar */}
@@ -458,8 +458,8 @@ export default function HomePage() {
 
           {/* Panel 2: How To Play + Decorative Image */}
           <div style={{
-            position: 'absolute', top: 0, right: 0, width: 'calc(50% - 20px)', height: '100%',
-            transform: activeTab === 'anonymous' ? 'translateX(0)' : 'translateX(calc(-100% - 40px))',
+            position: 'absolute', top: 0, right: 0, width: 'calc(50% - 30px)', height: '100%',
+            transform: activeTab === 'anonymous' ? 'translateX(0)' : 'translateX(calc(-100% - 60px))',
             transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)', zIndex: 1,
             display: 'flex', flexDirection: 'column', gap: 12
           }}>
@@ -468,7 +468,7 @@ export default function HomePage() {
               className="folder-content interactive-help-card"
               style={{
                 flex: 1,
-                marginTop: activeTab === 'anonymous' ? 46 : 125,
+                marginTop: activeTab === 'anonymous' ? 46 : 145,
                 padding: '8px 12px',
                 transition: 'margin-top 0.5s cubic-bezier(0.4, 0, 0.2, 1), padding 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
