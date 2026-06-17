@@ -132,17 +132,12 @@ io.on('connection', (socket) => {
         return;
       }
 
-      let forceSpectator = false;
-      if (room.game && room.game.phase !== Game.PHASE.WAITING) {
-        forceSpectator = true;
-      }
-
-      if (room.isFull() && !forceSpectator && !isSpectator) {
+      if (room.isFull() && !isSpectator) {
         socket.emit('join_error', { message: 'Room is full!' });
         return;
       }
 
-      const finalIsSpectator = !!(isSpectator || forceSpectator);
+      const finalIsSpectator = !!isSpectator;
       const playerId = uuidv4();
       const player = new Player(playerId, playerName || 'Artist', socket.id, avatarSeed, finalIsSpectator);
       room.addPlayer(player);
@@ -150,9 +145,17 @@ io.on('connection', (socket) => {
       socket.join(upperCode);
       socketToPlayer.set(socket.id, { playerId, roomId: upperCode });
 
+      // Add player to drawQueue if game is active and player is a gamer
+      const isGameActive = room.game && room.game.phase !== Game.PHASE.WAITING;
+      if (isGameActive && !player.isSpectator) {
+        if (!room.game.drawQueue.includes(player.id)) {
+          room.game.drawQueue.push(player.id);
+        }
+      }
+
       // Tell the new player their info + full room state
       let gameStateData = null;
-      if (room.game && room.game.phase !== Game.PHASE.WAITING) {
+      if (isGameActive) {
         gameStateData = {
           phase: room.game.phase,
           currentRound: room.game.currentRound,
@@ -162,7 +165,7 @@ io.on('connection', (socket) => {
           timeLeft: room.game.timeLeft,
           hint: room.game.getHintDisplay(),
           blankWord: room.game._makeBlank(room.game.currentWord || ''),
-          currentWord: room.game.currentWord,
+          currentWord: (finalIsSpectator && room.game.currentWord) ? room.game.currentWord : null,
         };
       }
 
@@ -179,11 +182,13 @@ io.on('connection', (socket) => {
         players: room.getPlayerList(),
       });
 
-      if (forceSpectator) {
+      if (isGameActive) {
         room.broadcast('chat_message', {
           playerId: 'system',
           playerName: 'System',
-          text: `${player.name} joined as a spectator because the game is in progress.`,
+          text: finalIsSpectator 
+            ? `${player.name} joined as a spectator.`
+            : `${player.name} joined as a player.`,
           type: 'system'
         });
       }

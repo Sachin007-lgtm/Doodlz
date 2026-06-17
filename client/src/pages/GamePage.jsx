@@ -25,6 +25,43 @@ export default function GamePage() {
   const [exitConfirm, setExitConfirm] = useState(false)
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
 
+  // Direct join states
+  const [playerName, setPlayerName] = useState('')
+  const [avatarSeed, setAvatarSeed] = useState(() => Math.random().toString(36).substring(2, 10))
+  const [isSpectator, setIsSpectator] = useState(false)
+  const [joinLoading, setJoinLoading] = useState(false)
+
+  // Clear join loading state on socket events
+  useEffect(() => {
+    if (!socket) return
+    const handleJoinDone = () => {
+      setJoinLoading(false)
+    }
+    socket.on('join_error', handleJoinDone)
+    socket.on('room_joined', handleJoinDone)
+    return () => {
+      socket.off('join_error', handleJoinDone)
+      socket.off('room_joined', handleJoinDone)
+    }
+  }, [socket])
+
+  const handleJoin = () => {
+    if (!playerName.trim()) {
+      alert('Enter your artist name first!')
+      return
+    }
+    setJoinLoading(true)
+    socket.emit('join_room', {
+      roomId: roomId.toUpperCase(),
+      playerName: playerName.trim(),
+      avatarSeed,
+      isSpectator
+    })
+  }
+
+  const pressDown = (e) => { e.currentTarget.style.transform = 'translate(2px, 2px)'; e.currentTarget.style.boxShadow = '1px 1px 0px #000' }
+  const pressUp = (e) => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '3px 3px 0px #000000' }
+
   useEffect(() => {
     document.body.classList.remove('light-theme', 'dark-theme')
     document.body.classList.add(`${theme}-theme`)
@@ -93,6 +130,143 @@ export default function GamePage() {
       setExitConfirm(true)
       setTimeout(() => setExitConfirm(false), 3000)
     }
+  }
+
+  // Show join overlay if player is not in the room yet (joined via direct link)
+  if (!myPlayer) {
+    return (
+      <div className="page-wrapper" style={{
+        position: 'fixed',
+        inset: 0,
+        background: '#1c1a27',
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{
+          background: '#fdfcf4',
+          border: '4px solid #000000',
+          borderRadius: 16,
+          boxShadow: 'inset 0 0 0 3px #ffffff, 8px 8px 0px #000000',
+          padding: '40px 50px',
+          textAlign: 'center',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 24,
+          maxWidth: 400,
+          width: '90%',
+          animation: 'pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        }}>
+          {/* Logo */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <img src={doodlzLogoImg} alt="Doodlz" style={{ height: 80, objectFit: 'contain', marginBottom: -10 }} />
+            <h1 style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 24,
+              fontWeight: 900,
+              color: '#5c86f0',
+              textShadow: '1.5px 1.5px 0px #000000',
+              letterSpacing: '0.05em',
+              margin: 0
+            }}>
+              JOIN ROOM
+            </h1>
+            <p style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              color: '#888888',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginTop: 4
+            }}>
+              Room Code: #{roomId}
+            </p>
+          </div>
+
+          {/* Nickname & Avatar Selection */}
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', width: '100%' }}>
+            {/* Avatar */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+              <div style={{ position: 'relative' }}>
+                <img src={`https://api.dicebear.com/7.x/adventurer/svg?seed=${encodeURIComponent(avatarSeed)}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`} alt="Your avatar"
+                  style={{ width: 90, height: 90, borderRadius: '50%', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 3px 3px 0px #000000', background: 'var(--secondary-container)' }}
+                />
+                <button
+                  onClick={() => setAvatarSeed(Math.random().toString(36).substring(2, 10))}
+                  title="Get a new avatar!"
+                  style={{
+                    position: 'absolute', bottom: 0, right: 0,
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: '#ffffff', border: '2px solid #000000',
+                    boxShadow: 'inset 0 0 0 1px #ffffff, 1.5px 1.5px 0px #000000', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'transform 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: 14, color: '#000000', fontWeight: 'bold' }}>refresh</span>
+                </button>
+              </div>
+              <span style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 9, color: '#000000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Character
+              </span>
+            </div>
+
+            {/* Name input & spectator checkbox */}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
+              <div>
+                <p style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, marginBottom: 4, color: '#000000', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Nickname
+                </p>
+                <input
+                  className="input"
+                  placeholder="Your artist name..."
+                  value={playerName}
+                  onChange={e => setPlayerName(e.target.value)}
+                  maxLength={20}
+                  onKeyDown={e => e.key === 'Enter' && handleJoin()}
+                  style={{ fontSize: 12, fontWeight: 700, padding: '6px 10px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 2.5px 2.5px 0px #000000', width: '100%', boxSizing: 'border-box', color: '#000000' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                <input
+                  type="checkbox"
+                  id="spectator-join"
+                  checked={isSpectator}
+                  onChange={e => setIsSpectator(e.target.checked)}
+                  style={{ width: 14, height: 14, cursor: 'pointer', accentColor: 'var(--primary)' }}
+                />
+                <label htmlFor="spectator-join" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 11, color: '#000000', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Join as Spectator
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Join Buttons */}
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <button className="btn" style={{ width: '100%', fontSize: 14, padding: '8px 0', borderRadius: 6, background: '#a78bfa', color: '#000000', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 3px 3px 0px #000000', fontWeight: 900, transition: 'all 0.1s' }}
+              onClick={handleJoin} disabled={joinLoading}
+              onMouseDown={pressDown} onMouseUp={pressUp} onMouseLeave={pressUp}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18, marginRight: 6, marginBottom: -6, verticalAlign: 'middle' }}>login</span>
+              {joinLoading ? 'JOINING…' : 'JOIN GAME'}
+            </button>
+
+            <button className="btn btn-ghost" style={{ width: '100%', fontSize: 12, padding: '6px 0', border: '2px solid #000', background: 'transparent', color: '#000', boxShadow: '2px 2px 0px #000', borderRadius: 6, fontWeight: 800, transition: 'all 0.1s' }}
+              onClick={() => navigate('/')}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   // Show waiting room if game hasn't started yet
