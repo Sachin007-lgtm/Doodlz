@@ -79,7 +79,7 @@ export default function HomePage() {
           clearInterval(progressInterval)
           return 100
         }
-        const diff = Math.random() * 5 + 2
+        const diff = Math.random() * 7 + 4
         return Math.min(100, prev + diff)
       })
     }, 120)
