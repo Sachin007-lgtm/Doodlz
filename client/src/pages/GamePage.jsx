@@ -30,6 +30,14 @@ export default function GamePage() {
   const [avatarSeed, setAvatarSeed] = useState(() => Math.random().toString(36).substring(2, 10))
   const [isSpectator, setIsSpectator] = useState(false)
   const [joinLoading, setJoinLoading] = useState(false)
+  const [sidebarCopied, setSidebarCopied] = useState(false)
+
+  const copyInviteLinkFromSidebar = () => {
+    const inviteUrl = `${window.location.origin}/game/${roomId}`
+    navigator.clipboard.writeText(inviteUrl).catch(() => {})
+    setSidebarCopied(true)
+    setTimeout(() => setSidebarCopied(false), 2000)
+  }
 
   // Clear join loading state on socket events
   useEffect(() => {
@@ -403,9 +411,33 @@ export default function GamePage() {
             <PlayerList players={players} myId={myId} currentDrawerId={gameState.currentDrawerId} />
           </div>
           {/* Room code */}
-          <div style={{ padding: '6px 10px', borderBottom: '2px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--secondary)' }}>meeting_room</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--secondary)', fontWeight: 600 }}>Room #{roomId}</span>
+          <div style={{ padding: '6px 10px', borderBottom: '2px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 14, color: 'var(--secondary)' }}>meeting_room</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--secondary)', fontWeight: 600 }}>Room #{roomId}</span>
+            </div>
+            <button 
+              onClick={copyInviteLinkFromSidebar}
+              title="Copy invite link to clipboard"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                color: sidebarCopied ? '#00FA9A' : 'var(--secondary)',
+                padding: '2px 4px',
+                borderRadius: 4,
+                transition: 'color 0.2s',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                {sidebarCopied ? 'check' : 'content_copy'}
+              </span>
+              <span style={{ fontSize: 9, fontFamily: 'var(--font-mono)', fontWeight: 700, marginLeft: 3 }}>
+                {sidebarCopied ? 'COPIED!' : 'LINK'}
+              </span>
+            </button>
           </div>
 
           {/* Replay Last Round button */}
@@ -455,8 +487,9 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
   const [copied, setCopied] = useState(false)
   const isHost = myPlayer?.isHost
 
-  const copyCode = () => {
-    navigator.clipboard.writeText(roomId || '').catch(() => {})
+  const copyInviteLink = () => {
+    const inviteUrl = `${window.location.origin}/game/${roomId}`
+    navigator.clipboard.writeText(inviteUrl).catch(() => {})
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -486,7 +519,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
         <div style={{ textAlign: 'center', position: 'relative', width: '100%', marginTop: -20 }}>
           <img src={doodlzLogoImg} alt="Doodlz" style={{ height: 130, objectFit: 'contain', display: 'block', margin: '0 auto', transform: 'translateY(8px)' }} />
           <div style={{ position: 'absolute', top: 10, right: 0, display: 'flex', gap: 8 }}>
-            <button onClick={copyCode} title="Copy room code" style={{
+            <button onClick={copyInviteLink} title="Copy invite link" style={{
               width: 40, height: 40, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.9)',
               background: '#fdfcf4',
               cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -509,7 +542,7 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
         <div style={{ ...glassCard, padding: '14px 28px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 56 }}>
           <div>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9d4edd', marginBottom: 2 }}>Invite Friends</p>
-            <h1 onClick={copyCode} style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px, 3.5vw, 36px)', fontWeight: 900, color: '#000000', letterSpacing: '0.12em', cursor: 'pointer', margin: 0 }}>
+            <h1 onClick={copyInviteLink} style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(22px, 3.5vw, 36px)', fontWeight: 900, color: '#000000', letterSpacing: '0.12em', cursor: 'pointer', margin: 0 }}>
               #{roomId}
             </h1>
           </div>
@@ -518,14 +551,14 @@ function WaitingRoom({ roomId, players, myPlayer, socket, gameState, navigate, r
             <p style={{ fontSize: 12, color: '#555', margin: 0, fontFamily: 'var(--font-body)', fontWeight: 600 }}>
               {players.length} player{players.length !== 1 ? 's' : ''} in lobby
             </p>
-            <button onClick={copyCode} style={{
+            <button onClick={copyInviteLink} style={{
               display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
               background: copied ? '#00b4d8' : '#9d4edd', color: '#fff', border: 'none',
               borderRadius: 20, cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700,
               fontSize: 12, letterSpacing: '0.03em', transition: 'background 0.2s',
             }}>
               <span className="material-symbols-outlined" style={{ fontSize: 14 }}>{copied ? 'check' : 'content_copy'}</span>
-              {copied ? 'Copied!' : 'Copy Code'}
+              {copied ? 'Copied!' : 'Copy Invite Link'}
             </button>
           </div>
         </div>

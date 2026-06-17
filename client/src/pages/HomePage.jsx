@@ -165,9 +165,17 @@ export default function HomePage() {
 
   const handleJoin = () => {
     if (!validate()) return
-    if (!joinCode.trim()) { alert('Enter a room code!'); return }
+    let code = joinCode.trim()
+    if (!code) { alert('Enter a room code or link!'); return }
+
+    // Parse code if it's a URL
+    if (code.toLowerCase().includes('/game/')) {
+      const parts = code.split(/\/game\//i)
+      code = parts[parts.length - 1].split('?')[0].split('#')[0]
+    }
+
     setLoading('join')
-    socket.emit('join_room', { roomId: joinCode.trim().toUpperCase(), playerName: playerName.trim(), avatarSeed, isSpectator })
+    socket.emit('join_room', { roomId: code.toUpperCase(), playerName: playerName.trim(), avatarSeed, isSpectator })
   }
 
   const handleNextStep = () => {
@@ -422,12 +430,12 @@ export default function HomePage() {
                             Enter Room Code
                           </p>
                           <input className="input"
-                            placeholder="ENTER CODE"
+                            placeholder="CODE OR LINK"
                             value={joinCode}
-                            onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                            maxLength={8}
+                            onChange={e => setJoinCode(e.target.value)}
+                            maxLength={150}
                             onKeyDown={e => e.key === 'Enter' && handleJoin()}
-                            style={{ letterSpacing: '0.1em', fontWeight: 800, fontSize: 12, textAlign: 'center', padding: '6px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 2.5px 2.5px 0px #000000', boxSizing: 'border-box', color: '#000000', width: 170 }}
+                            style={{ letterSpacing: '0.05em', fontWeight: 800, fontSize: 12, textAlign: 'center', padding: '6px', background: '#ffffff', border: '3px solid #000000', boxShadow: 'inset 0 0 0 1.5px #ffffff, 2.5px 2.5px 0px #000000', boxSizing: 'border-box', color: '#000000', width: 170 }}
                           />
                         </div>
 
